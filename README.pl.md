@@ -23,6 +23,7 @@ Samodzielnie zbudowany procesor do wywoływania filmów (C-41, B&W, E-6, ECN-2, 
 - [Tryb „czujnik nie w chemii”](#tryb-czujnik-nie-w-chemii)
 - [Programy i ustawienia](#programy-i-ustawienia)
 - [Sprzęt](#sprzęt)
+  - [Schematy budowy](#schematy-budowy)
 - [Wgrywanie programu](#wgrywanie-programu)
 - [Struktura repozytorium](#struktura-repozytorium)
 
@@ -155,6 +156,27 @@ Przy małej ilości chemii (np. Paterson na stojąco z 3 rolkami) sonda nie się
 
 Płytka ma wyprowadzone tylko dwa wolne piny: GPIO21 steruje silnikiem (UART), a GPIO20 czujnikiem (1-Wire). Przycisk BOOT (GPIO9) to START / PAUZA / DALEJ i jednocześnie sygnał dla głośnika.
 
+### Schematy budowy
+
+Z [dokumentacji PDF](docs/pl/SpoolFilmProcessor_dokumentacja_v2.1.pdf) (podpisy na rysunkach po angielsku).
+
+**Połączenia główne** – ESP32-C3, TMC2209, DS18B20, XL6009, moduł ładowania, akumulator:
+
+<img src="docs/schematics/schematic_main.png" width="820" alt="Schemat główny">
+
+**Głośnik** – wzmacniacz LM386 sterowany z nóżki BOOT (GPIO9):
+
+<img src="docs/schematics/schematic_speaker.png" width="820" alt="Układ głośnika">
+
+| | |
+|---|---|
+| <img src="docs/schematics/pinout_tmc2209.png" width="400"> | <img src="docs/schematics/pinout_lm386.png" width="400"> |
+| Piny **TMC2209 V985** – PDN przez 1 kΩ do GPIO21, VIO do 3,3 V. | Piny **LM386** (widok z góry). |
+| <img src="docs/schematics/seal_cross_section.png" width="400"> | <img src="docs/schematics/id_boot_pin.png" width="260"> |
+| **Uszczelnienie wałka** – tulejka 8×1,5 na wałku z D, simmering 8×16×5, komora odpływowa. | **Przycisk BOOT** – nóżkę GPIO9 (3,3 V) znajdziesz miernikiem. |
+| <img src="docs/schematics/id_smd_resistors.png" width="260"> | <img src="docs/schematics/id_smd_capacitor.png" width="260"> |
+| Oznaczenia **rezystorów SMD** (4701 = 4,7 kΩ, 1001 = 1 kΩ). | Biegunowość **elektrolitów SMD** (czarne pole = minus). |
+
 Pełna lista części (BOM), schematy, tabele połączeń, montaż i uszczelnienia: **[SpoolFilmProcessor_dokumentacja_v2.1.pdf](docs/pl/SpoolFilmProcessor_dokumentacja_v2.1.pdf)** (źródło: [docs/pl/schemat.html](docs/pl/schemat.html)).
 
 ---
@@ -182,6 +204,7 @@ firmware/           gotowe pliki .bin, skrypty wgrywania, ZIP dla Arduino IDE
 docs/screens/       zrzuty ekranu z urządzenia
 README.md           README po angielsku (domyślny)
 docs/photos/        zdjęcia urządzenia i model z Fusion 360
+docs/schematics/    schematy budowy (połączenia, głośnik, piny, uszczelnienie wałka)
 docs/pl/            dokumentacja (BOM, schematy, montaż, uszczelnienia, obsługa), PDF i instrukcja po polsku
 documentation.html  dokumentacja po angielsku (+ PDF)
 INSTRUCTIONS.md     instrukcja po angielsku

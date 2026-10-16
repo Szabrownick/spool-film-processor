@@ -23,6 +23,7 @@ A DIY film developing processor (C-41, B&W, E-6, ECN-2, RA-4). A stepper motor a
 - [“Probe not in chemistry” mode](#probe-not-in-chemistry-mode)
 - [Programs and settings](#programs-and-settings)
 - [Hardware](#hardware)
+  - [Build diagrams](#build-diagrams)
 - [Flashing the firmware](#flashing-the-firmware)
 - [Repository layout](#repository-layout)
 
@@ -157,6 +158,27 @@ With little chemistry (e.g. an upright Paterson with 3 reels) the probe does not
 
 The board exposes only two free pins: GPIO21 drives the motor (UART) and GPIO20 reads the probe (1-Wire). The BOOT button (GPIO9) is START / PAUSE / NEXT and also feeds the speaker amplifier.
 
+### Build diagrams
+
+From the [documentation PDF](SpoolFilmProcessor_documentation_v2.1.pdf).
+
+**Main wiring** – ESP32-C3, TMC2209, DS18B20, XL6009, charger module, battery:
+
+<img src="docs/schematics/schematic_main.png" width="820" alt="Main wiring diagram">
+
+**Speaker** – LM386 amplifier driven from the BOOT pin (GPIO9):
+
+<img src="docs/schematics/schematic_speaker.png" width="820" alt="Speaker circuit">
+
+| | |
+|---|---|
+| <img src="docs/schematics/pinout_tmc2209.png" width="400"> | <img src="docs/schematics/pinout_lm386.png" width="400"> |
+| **TMC2209 V985** pinout – PDN via 1 kΩ to GPIO21, VIO to 3.3 V. | **LM386** pinout (top view). |
+| <img src="docs/schematics/seal_cross_section.png" width="400"> | <img src="docs/schematics/id_boot_pin.png" width="260"> |
+| **Shaft seal** – 8×1.5 sleeve on the D-shaft, 8×16×5 seal, drain chamber. | **BOOT button** – find the GPIO9 pin (3.3 V) with a multimeter. |
+| <img src="docs/schematics/id_smd_resistors.png" width="260"> | <img src="docs/schematics/id_smd_capacitor.png" width="260"> |
+| **SMD resistor** codes (4701 = 4.7 kΩ, 1001 = 1 kΩ). | **SMD electrolytic** polarity (black field = minus). |
+
 Full bill of materials, schematics, wiring tables, assembly and sealing details: **[SpoolFilmProcessor_documentation_v2.1.pdf](SpoolFilmProcessor_documentation_v2.1.pdf)** (source: [documentation.html](documentation.html); Polish version in [docs/pl](docs/pl)).
 
 ---
@@ -186,6 +208,7 @@ documentation.html  documentation (BOM, schematics, assembly, seals, usage)
 SpoolFilmProcessor_documentation_v2.1.pdf
 INSTRUCTIONS.md     environment setup, flashing and testing, step by step
 docs/photos/        photos of the build and the Fusion 360 model
+docs/schematics/    build diagrams (wiring, speaker, pinouts, shaft seal)
 docs/pl/            Polish documentation, instructions and PDF
 README.pl.md        this README in Polish
 ```
