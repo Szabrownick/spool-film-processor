@@ -45,14 +45,32 @@ After power-on the device opens the **last used program** right away. Back goes 
 
 ## Photos
 
-| | |
-|---|---|
-| <img src="docs/photos/01_finished_front.jpg" width="400"> | <img src="docs/photos/02_tank_seat_agitator.jpg" width="400"> |
-| Finished device: PETG front with the touch screen and battery indicator, handle on top. | Tank seat with the O-ring groove, agitator shaft and positioning pin. |
-| <img src="docs/photos/03_in_use_prewash.jpg" width="400"> | <img src="docs/photos/04_assembly_display.jpg" width="400"> |
-| In use at the sink: rinse step, the probe reads the tap water (41.5 °C). | Assembly: display and ESP32-C3 board fitted, START setup screen. |
-| <img src="docs/photos/05_enclosure_motor_mount.jpg" width="400"> | <img src="docs/photos/06_electronics.jpg" width="400"> |
-| Enclosure with the NEMA17 motor mount. | Electronics: TMC2209 with heatsink, XL6009, charger module, LM386 on perfboard, battery. |
+<table>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/photos/01_finished_front.jpg" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/photos/02_tank_seat_agitator.jpg" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top">Finished device: PETG front with the touch screen and battery indicator, handle on top.</td>
+<td width="50%" valign="top">Tank seat with the O-ring groove, agitator shaft and positioning pin.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/photos/03_in_use_prewash.jpg" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/photos/04_assembly_display.jpg" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top">In use at the sink: rinse step, the probe reads the tap water (41.5 °C).</td>
+<td width="50%" valign="top">Assembly: display and ESP32-C3 board fitted, START setup screen.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/photos/05_enclosure_motor_mount.jpg" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/photos/06_electronics.jpg" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top">Enclosure with the NEMA17 motor mount.</td>
+<td width="50%" valign="top">Electronics: TMC2209 with heatsink, XL6009, charger module, LM386 on perfboard, battery.</td>
+</tr>
+</table>
 
 <p align="center"><img src="docs/photos/00_fusion360_model.png" width="820" alt="Fusion 360 model"><br><i>Fusion 360 model – 3D print files coming soon on MakerWorld.</i></p>
 
@@ -64,51 +82,135 @@ All screenshots are taken directly from the device (320×240 screen, scaled 2× 
 
 ### Choosing a program
 
-| | |
-|---|---|
-| <img src="docs/screens/01_menu.png" width="320"> | <img src="docs/screens/02_process_type.png" width="320"> |
-| **Main menu:** factory programs, custom programs, thermometer, settings. | **Process type:** C-41, B&W, E-6, ECN-2 and RA-4 tiles with the number of programs. |
-| <img src="docs/screens/03_list_c41.png" width="320"> | <img src="docs/screens/04_program_adox.png" width="320"> |
-| **Program list** with total time, chemistry kit and rolls used. | **Program:** steps with time, agitation (ROLL) and temperature control (ADOX curve; MON = monitor only). |
-| <img src="docs/screens/05_chem_used.png" width="320"> | <img src="docs/screens/04b_program_rinse.png" width="320"> |
-| **Chemistry:** fresh or used, rolls used, kit (ADOX, Tetenal, Bellini, Cinestill…). Below: how much longer the developer and blix will take. | **Rinse by water changes**, e.g. “6x ROLL”: 6 water changes within the step time. |
+<table>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/01_menu.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/02_process_type.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>Main menu:</b> factory programs, custom programs, thermometer, settings.</td>
+<td width="50%" valign="top"><b>Process type:</b> C-41, B&W, E-6, ECN-2 and RA-4 tiles with the number of programs.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/03_list_c41.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/04_program_adox.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>Program list</b> with total time, chemistry kit and rolls used.</td>
+<td width="50%" valign="top"><b>Program:</b> steps with time, agitation (ROLL) and temperature control (ADOX curve; MON = monitor only).</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/05_chem_used.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/04b_program_rinse.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>Chemistry:</b> fresh or used, rolls used, kit (ADOX, Tetenal, Bellini, Cinestill…). Below: how much longer the developer and blix will take.</td>
+<td width="50%" valign="top"><b>Rinse by water changes</b>, e.g. “6x ROLL”: 6 water changes within the step time.</td>
+</tr>
+</table>
 
 ### Setup and start
 
-| | |
-|---|---|
-| <img src="docs/screens/08d_setup.png" width="320"> | <img src="docs/screens/08e_setup_lying.png" width="320"> |
-| **START screen:** upright or lying, does the probe touch the chemistry, chemistry volume, pre-wash temperature. Below: predicted tank temperature when the chemistry is poured. | Settings are **remembered per program**, so usually you just press NEXT. |
-| <img src="docs/screens/07a_start_preheat.png" width="320"> | <img src="docs/screens/08f_water_prewash.png" width="320"> |
-| **First step:** “roll 6/16” at the top (chemistry usage check), estimated time of the whole process at the bottom. | **Pre-wash:** the probe measures tap water (last peak, maximum). Green = 38–45 °C. |
+<table>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/08d_setup.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/08e_setup_lying.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>START screen:</b> upright or lying, does the probe touch the chemistry, chemistry volume, pre-wash temperature. Below: predicted tank temperature when the chemistry is poured.</td>
+<td width="50%" valign="top">Settings are <b>remembered per program</b>, so usually you just press NEXT.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/07a_start_preheat.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/08f_water_prewash.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>First step:</b> “roll 6/16” at the top (chemistry usage check), estimated time of the whole process at the bottom.</td>
+<td width="50%" valign="top"><b>Pre-wash:</b> the probe measures tap water (last peak, maximum). Green = 38–45 °C.</td>
+</tr>
+</table>
 
 ### During the process
 
-| | |
-|---|---|
-| <img src="docs/screens/07_pour_developer.png" width="320"> | <img src="docs/screens/08_countdown.png" width="320"> |
-| **POUR IN: Developer** – estimated step time, remaining time of the whole process, temperature. | **Countdown:** big timer, progress bar, extension (“+1:08”) and the total time multiplier; the bottom line alternates between temperature and chemistry factors every 3 s. |
-| <img src="docs/screens/08b_probe_off_pour.png" width="320"> | <img src="docs/screens/08c_probe_off_countdown.png" width="320"> |
-| **Probe not in chemistry:** room temperature, modelled tank temperature and a forecast for the step (“37.8>36.9°”, “+0:24”). | During the step the big number is the **chemistry temperature from the thermal model**. |
-| <img src="docs/screens/09_drain.png" width="320"> | <img src="docs/screens/09b_water_change.png" width="320"> |
-| **DRAIN:** motor stopped, 15 s drain countdown, next step shown. | **Water change** during a rinse by water changes (3 of 6). |
-| <img src="docs/screens/09c_rinse_countdown.png" width="320"> | <img src="docs/screens/10_done.png" width="320"> |
-| Countdown of one water change. | **DONE:** total time and rolls in the tank; chemistry usage is stored on SAVE & FINISH. |
+<table>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/07_pour_developer.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/08_countdown.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>POUR IN: Developer</b> – estimated step time, remaining time of the whole process, temperature.</td>
+<td width="50%" valign="top"><b>Countdown:</b> big timer, progress bar, extension (“+1:08”) and the total time multiplier; the bottom line alternates between temperature and chemistry factors every 3 s.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/08b_probe_off_pour.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/08c_probe_off_countdown.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>Probe not in chemistry:</b> room temperature, modelled tank temperature and a forecast for the step (“37.8>36.9°”, “+0:24”).</td>
+<td width="50%" valign="top">During the step the big number is the <b>chemistry temperature from the thermal model</b>.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/09_drain.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/09b_water_change.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>DRAIN:</b> motor stopped, 15 s drain countdown, next step shown.</td>
+<td width="50%" valign="top"><b>Water change</b> during a rinse by water changes (3 of 6).</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/09c_rinse_countdown.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/10_done.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top">Countdown of one water change.</td>
+<td width="50%" valign="top"><b>DONE:</b> total time and rolls in the tank; chemistry usage is stored on SAVE & FINISH.</td>
+</tr>
+</table>
 
 ### Settings and tools
 
-| | |
-|---|---|
-| <img src="docs/screens/11_settings_1.png" width="320"> | <img src="docs/screens/12_settings_2.png" width="320"> |
-| Language EN / PL, sound, minute beeps, brightness. | Rotate screen 180°, units °C / °F, agitation parameters. |
-| <img src="docs/screens/13_settings_3.png" width="320"> | <img src="docs/screens/13b_settings_4.png" width="320"> |
-| Motor current, probe offset, B&W time reduction. | Touch calibration, motor test, WiFi update, reset. |
-| <img src="docs/screens/14_step_edit.png" width="320"> | <img src="docs/screens/15_roll_agitation.png" width="320"> |
-| **Step editor:** name, time, water changes, agitation, temperature control. | **ROLL agitation:** speed and clockwise / counter-clockwise times. |
-| <img src="docs/screens/16_thermometer.png" width="320"> | <img src="docs/screens/17_motor_test.png" width="320"> |
-| **Thermometer** with min / max. | **Motor test** – speed, current, direction. |
-| <img src="docs/screens/20_calibration.png" width="320"> | <img src="docs/screens/18_info.png" width="320"> |
-| **Touch calibration:** 3 crosses; started by touching the screen while the logo is shown. | **Info:** firmware version with build date, sensors, memory. |
+<table>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/11_settings_1.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/12_settings_2.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top">Language EN / PL, sound, minute beeps, brightness.</td>
+<td width="50%" valign="top">Rotate screen 180°, units °C / °F, agitation parameters.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/13_settings_3.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/13b_settings_4.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top">Motor current, probe offset, B&W time reduction.</td>
+<td width="50%" valign="top">Touch calibration, motor test, WiFi update, reset.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/14_step_edit.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/15_roll_agitation.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>Step editor:</b> name, time, water changes, agitation, temperature control.</td>
+<td width="50%" valign="top"><b>ROLL agitation:</b> speed and clockwise / counter-clockwise times.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/16_thermometer.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/17_motor_test.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>Thermometer</b> with min / max.</td>
+<td width="50%" valign="top"><b>Motor test</b> – speed, current, direction.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/20_calibration.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/18_info.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>Touch calibration:</b> 3 crosses; started by touching the screen while the logo is shown.</td>
+<td width="50%" valign="top"><b>Info:</b> firmware version with build date, sensors, memory.</td>
+</tr>
+</table>
 
 *The boot and Info screenshots were taken on v2.0; v2.1 only differs in the version number.*
 
@@ -170,14 +272,32 @@ From the [documentation PDF](SpoolFilmProcessor_documentation_v2.1.pdf).
 
 <img src="docs/schematics/schematic_speaker.png" width="820" alt="Speaker circuit">
 
-| | |
-|---|---|
-| <img src="docs/schematics/pinout_tmc2209.png" width="400"> | <img src="docs/schematics/pinout_lm386.png" width="400"> |
-| **TMC2209 V985** pinout – PDN via 1 kΩ to GPIO21, VIO to 3.3 V. | **LM386** pinout (top view). |
-| <img src="docs/schematics/seal_cross_section.png" width="400"> | <img src="docs/schematics/id_boot_pin.png" width="260"> |
-| **Shaft seal** – 8×1.5 sleeve on the D-shaft, 8×16×5 seal, drain chamber. | **BOOT button** – find the GPIO9 pin (3.3 V) with a multimeter. |
-| <img src="docs/schematics/id_smd_resistors.png" width="260"> | <img src="docs/schematics/id_smd_capacitor.png" width="260"> |
-| **SMD resistor** codes (4701 = 4.7 kΩ, 1001 = 1 kΩ). | **SMD electrolytic** polarity (black field = minus). |
+<table>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/schematics/pinout_tmc2209.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/schematics/pinout_lm386.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>TMC2209 V985</b> pinout – PDN via 1 kΩ to GPIO21, VIO to 3.3 V.</td>
+<td width="50%" valign="top"><b>LM386</b> pinout (top view).</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/schematics/seal_cross_section.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/schematics/id_boot_pin.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>Shaft seal</b> – 8×1.5 sleeve on the D-shaft, 8×16×5 seal, drain chamber.</td>
+<td width="50%" valign="top"><b>BOOT button</b> – find the GPIO9 pin (3.3 V) with a multimeter.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/schematics/id_smd_resistors.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/schematics/id_smd_capacitor.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>SMD resistor</b> codes (4701 = 4.7 kΩ, 1001 = 1 kΩ).</td>
+<td width="50%" valign="top"><b>SMD electrolytic</b> polarity (black field = minus).</td>
+</tr>
+</table>
 
 Full bill of materials, schematics, wiring tables, assembly and sealing details: **[SpoolFilmProcessor_documentation_v2.1.pdf](SpoolFilmProcessor_documentation_v2.1.pdf)** (source: [documentation.html](documentation.html); Polish version in [docs/pl](docs/pl)).
 

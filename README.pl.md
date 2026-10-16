@@ -45,14 +45,32 @@ Po włączeniu urządzenie od razu otwiera **ostatnio użyty program**. Przycisk
 
 ## Zdjęcia
 
-| | |
-|---|---|
-| <img src="docs/photos/01_finished_front.jpg" width="400"> | <img src="docs/photos/02_tank_seat_agitator.jpg" width="400"> |
-| Gotowe urządzenie: front z PETG z ekranem dotykowym i wskaźnikiem baterii, uchwyt na górze. | Gniazdo koreksu z rowkiem na O-ring, wałek mieszadła i bolec ustalający. |
-| <img src="docs/photos/03_in_use_prewash.jpg" width="400"> | <img src="docs/photos/04_assembly_display.jpg" width="400"> |
-| W użyciu przy zlewie: płukanie, czujnik mierzy wodę z kranu (41,5 °C). | Montaż: ekran i płytka ESP32-C3 na miejscu, ekran START. |
-| <img src="docs/photos/05_enclosure_motor_mount.jpg" width="400"> | <img src="docs/photos/06_electronics.jpg" width="400"> |
-| Obudowa z mocowaniem silnika NEMA17. | Elektronika: TMC2209 z radiatorem, XL6009, moduł ładowania, LM386 na płytce uniwersalnej, akumulator. |
+<table>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/photos/01_finished_front.jpg" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/photos/02_tank_seat_agitator.jpg" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top">Gotowe urządzenie: front z PETG z ekranem dotykowym i wskaźnikiem baterii, uchwyt na górze.</td>
+<td width="50%" valign="top">Gniazdo koreksu z rowkiem na O-ring, wałek mieszadła i bolec ustalający.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/photos/03_in_use_prewash.jpg" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/photos/04_assembly_display.jpg" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top">W użyciu przy zlewie: płukanie, czujnik mierzy wodę z kranu (41,5 °C).</td>
+<td width="50%" valign="top">Montaż: ekran i płytka ESP32-C3 na miejscu, ekran START.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/photos/05_enclosure_motor_mount.jpg" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/photos/06_electronics.jpg" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top">Obudowa z mocowaniem silnika NEMA17.</td>
+<td width="50%" valign="top">Elektronika: TMC2209 z radiatorem, XL6009, moduł ładowania, LM386 na płytce uniwersalnej, akumulator.</td>
+</tr>
+</table>
 
 <p align="center"><img src="docs/photos/00_fusion360_model.png" width="820" alt="Model Fusion 360"><br><i>Model w Fusion 360 – pliki do druku wkrótce na MakerWorld.</i></p>
 
@@ -64,51 +82,135 @@ Zrzuty ekranu pochodzą prosto z urządzenia (ekran 320×240, na zrzutach powię
 
 ### Wybór programu
 
-| | |
-|---|---|
-| <img src="docs/screens/01_menu.png" width="320"> | <img src="docs/screens/02_process_type.png" width="320"> |
-| **Menu główne:** programy fabryczne, własne, termometr i ustawienia. | **Rodzaj procesu:** kafle C-41, B&W, E-6, ECN-2 i RA-4 z liczbą programów. |
-| <img src="docs/screens/03_list_c41.png" width="320"> | <img src="docs/screens/04_program_adox.png" width="320"> |
-| **Lista programów** z łącznym czasem, zestawem chemii i liczbą zużytych rolek. | **Program:** kroki z czasem, mieszaniem (ROLL) i kontrolą temperatury (krzywa ADOX, MON = tylko podgląd). |
-| <img src="docs/screens/05_chem_used.png" width="320"> | <img src="docs/screens/04b_program_rinse.png" width="320"> |
-| **Chemia:** świeża lub używana, liczba zużytych rolek, zestaw (ADOX, Tetenal, Bellini, Cinestill…). Na dole widać, o ile wydłuży się wywoływacz i blix. | **Płukanie zmianami wody**, np. „6x ROLL”: 6 wymian wody w czasie kroku. |
+<table>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/01_menu.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/02_process_type.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>Menu główne:</b> programy fabryczne, własne, termometr i ustawienia.</td>
+<td width="50%" valign="top"><b>Rodzaj procesu:</b> kafle C-41, B&W, E-6, ECN-2 i RA-4 z liczbą programów.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/03_list_c41.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/04_program_adox.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>Lista programów</b> z łącznym czasem, zestawem chemii i liczbą zużytych rolek.</td>
+<td width="50%" valign="top"><b>Program:</b> kroki z czasem, mieszaniem (ROLL) i kontrolą temperatury (krzywa ADOX, MON = tylko podgląd).</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/05_chem_used.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/04b_program_rinse.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>Chemia:</b> świeża lub używana, liczba zużytych rolek, zestaw (ADOX, Tetenal, Bellini, Cinestill…). Na dole widać, o ile wydłuży się wywoływacz i blix.</td>
+<td width="50%" valign="top"><b>Płukanie zmianami wody</b>, np. „6x ROLL”: 6 wymian wody w czasie kroku.</td>
+</tr>
+</table>
 
 ### Przygotowanie i start
 
-| | |
-|---|---|
-| <img src="docs/screens/08d_setup.png" width="320"> | <img src="docs/screens/08e_setup_lying.png" width="320"> |
-| **START:** pionowo albo poziomo, czy czujnik dotyka chemii, ilość chemii, temperatura kąpieli wstępnej. Pod spodem przewidywana temperatura koreksu przy wlewaniu chemii. | Ustawienia są **zapamiętywane dla każdego programu osobno**, więc zwykle wystarczy nacisnąć DALEJ. |
-| <img src="docs/screens/07a_start_preheat.png" width="320"> | <img src="docs/screens/08f_water_prewash.png" width="320"> |
-| **Pierwszy krok:** u góry „rolka 6/16” (kontrola zużycia chemii), na dole szacowany czas całego procesu. | **Kąpiel wstępna:** czujnik mierzy wodę z kranu (ostatni szczyt, maksimum). Kolor zielony oznacza zakres 38–45 °C. |
+<table>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/08d_setup.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/08e_setup_lying.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>START:</b> pionowo albo poziomo, czy czujnik dotyka chemii, ilość chemii, temperatura kąpieli wstępnej. Pod spodem przewidywana temperatura koreksu przy wlewaniu chemii.</td>
+<td width="50%" valign="top">Ustawienia są <b>zapamiętywane dla każdego programu osobno</b>, więc zwykle wystarczy nacisnąć DALEJ.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/07a_start_preheat.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/08f_water_prewash.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>Pierwszy krok:</b> u góry „rolka 6/16” (kontrola zużycia chemii), na dole szacowany czas całego procesu.</td>
+<td width="50%" valign="top"><b>Kąpiel wstępna:</b> czujnik mierzy wodę z kranu (ostatni szczyt, maksimum). Kolor zielony oznacza zakres 38–45 °C.</td>
+</tr>
+</table>
 
 ### W trakcie procesu
 
-| | |
-|---|---|
-| <img src="docs/screens/07_pour_developer.png" width="320"> | <img src="docs/screens/08_countdown.png" width="320"> |
-| **WLEJ: Wywoływacz** – szacowany czas kroku, pozostały czas całego procesu i temperatura. | **Odliczanie:** duży zegar, pasek postępu, wydłużenie („+1:08”) i łączny mnożnik czasu. Na dole co 3 s zmienia się opis: temperatura / chemia. |
-| <img src="docs/screens/08b_probe_off_pour.png" width="320"> | <img src="docs/screens/08c_probe_off_countdown.png" width="320"> |
-| **Czujnik nie w chemii:** temperatura pokoju, temperatura koreksu z modelu i prognoza kroku („37.8>36.9°”, „+0:24”). | W trakcie kroku duża liczba to **temperatura chemii z modelu cieplnego**. |
-| <img src="docs/screens/09_drain.png" width="320"> | <img src="docs/screens/09b_water_change.png" width="320"> |
-| **WYLEJ:** silnik stoi, odliczanie 15 s na ocieknięcie, podpowiedź kolejnego kroku. | **Zmiana wody** przy płukaniu zmianami (3 z 6). |
-| <img src="docs/screens/09c_rinse_countdown.png" width="320"> | <img src="docs/screens/10_done.png" width="320"> |
-| Odliczanie jednej zmiany wody. | **GOTOWE:** łączny czas i liczba rolek w koreksie; zużycie chemii zapisuje się po ZAPISZ. |
+<table>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/07_pour_developer.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/08_countdown.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>WLEJ: Wywoływacz</b> – szacowany czas kroku, pozostały czas całego procesu i temperatura.</td>
+<td width="50%" valign="top"><b>Odliczanie:</b> duży zegar, pasek postępu, wydłużenie („+1:08”) i łączny mnożnik czasu. Na dole co 3 s zmienia się opis: temperatura / chemia.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/08b_probe_off_pour.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/08c_probe_off_countdown.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>Czujnik nie w chemii:</b> temperatura pokoju, temperatura koreksu z modelu i prognoza kroku („37.8>36.9°”, „+0:24”).</td>
+<td width="50%" valign="top">W trakcie kroku duża liczba to <b>temperatura chemii z modelu cieplnego</b>.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/09_drain.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/09b_water_change.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>WYLEJ:</b> silnik stoi, odliczanie 15 s na ocieknięcie, podpowiedź kolejnego kroku.</td>
+<td width="50%" valign="top"><b>Zmiana wody</b> przy płukaniu zmianami (3 z 6).</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/09c_rinse_countdown.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/10_done.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top">Odliczanie jednej zmiany wody.</td>
+<td width="50%" valign="top"><b>GOTOWE:</b> łączny czas i liczba rolek w koreksie; zużycie chemii zapisuje się po ZAPISZ.</td>
+</tr>
+</table>
 
 ### Ustawienia i narzędzia
 
-| | |
-|---|---|
-| <img src="docs/screens/11_settings_1.png" width="320"> | <img src="docs/screens/12_settings_2.png" width="320"> |
-| Język PL / EN, dźwięk, pikanie co minutę, jasność. | Obrót ekranu 180°, jednostki °C / °F, parametry mieszania. |
-| <img src="docs/screens/13_settings_3.png" width="320"> | <img src="docs/screens/13b_settings_4.png" width="320"> |
-| Prąd silnika, korekta czujnika, redukcja czasu B&W. | Kalibracja dotyku, test silnika, aktualizacja przez WiFi, reset. |
-| <img src="docs/screens/14_step_edit.png" width="320"> | <img src="docs/screens/15_roll_agitation.png" width="320"> |
-| **Edycja kroku:** nazwa, czas, zmiany wody, mieszanie, kontrola temperatury. | **Mieszanie ROLL:** prędkość i czasy obrotów w prawo i w lewo. |
-| <img src="docs/screens/16_thermometer.png" width="320"> | <img src="docs/screens/17_motor_test.png" width="320"> |
-| **Termometr** z minimum i maksimum. | **Test silnika** – prędkość, prąd, kierunek. |
-| <img src="docs/screens/20_calibration.png" width="320"> | <img src="docs/screens/18_info.png" width="320"> |
-| **Kalibracja dotyku:** 3 krzyżyki. Uruchamia się dotknięciem ekranu w trakcie logo. | **Informacje:** wersja programu z datą kompilacji, czujniki, pamięć. |
+<table>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/11_settings_1.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/12_settings_2.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top">Język PL / EN, dźwięk, pikanie co minutę, jasność.</td>
+<td width="50%" valign="top">Obrót ekranu 180°, jednostki °C / °F, parametry mieszania.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/13_settings_3.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/13b_settings_4.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top">Prąd silnika, korekta czujnika, redukcja czasu B&W.</td>
+<td width="50%" valign="top">Kalibracja dotyku, test silnika, aktualizacja przez WiFi, reset.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/14_step_edit.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/15_roll_agitation.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>Edycja kroku:</b> nazwa, czas, zmiany wody, mieszanie, kontrola temperatury.</td>
+<td width="50%" valign="top"><b>Mieszanie ROLL:</b> prędkość i czasy obrotów w prawo i w lewo.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/16_thermometer.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/17_motor_test.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>Termometr</b> z minimum i maksimum.</td>
+<td width="50%" valign="top"><b>Test silnika</b> – prędkość, prąd, kierunek.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/20_calibration.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/18_info.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>Kalibracja dotyku:</b> 3 krzyżyki. Uruchamia się dotknięciem ekranu w trakcie logo.</td>
+<td width="50%" valign="top"><b>Informacje:</b> wersja programu z datą kompilacji, czujniki, pamięć.</td>
+</tr>
+</table>
 
 ---
 
@@ -168,14 +270,32 @@ Z [dokumentacji PDF](docs/pl/SpoolFilmProcessor_dokumentacja_v2.1.pdf) (podpisy 
 
 <img src="docs/schematics/schematic_speaker.png" width="820" alt="Układ głośnika">
 
-| | |
-|---|---|
-| <img src="docs/schematics/pinout_tmc2209.png" width="400"> | <img src="docs/schematics/pinout_lm386.png" width="400"> |
-| Piny **TMC2209 V985** – PDN przez 1 kΩ do GPIO21, VIO do 3,3 V. | Piny **LM386** (widok z góry). |
-| <img src="docs/schematics/seal_cross_section.png" width="400"> | <img src="docs/schematics/id_boot_pin.png" width="260"> |
-| **Uszczelnienie wałka** – tulejka 8×1,5 na wałku z D, simmering 8×16×5, komora odpływowa. | **Przycisk BOOT** – nóżkę GPIO9 (3,3 V) znajdziesz miernikiem. |
-| <img src="docs/schematics/id_smd_resistors.png" width="260"> | <img src="docs/schematics/id_smd_capacitor.png" width="260"> |
-| Oznaczenia **rezystorów SMD** (4701 = 4,7 kΩ, 1001 = 1 kΩ). | Biegunowość **elektrolitów SMD** (czarne pole = minus). |
+<table>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/schematics/pinout_tmc2209.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/schematics/pinout_lm386.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top">Piny <b>TMC2209 V985</b> – PDN przez 1 kΩ do GPIO21, VIO do 3,3 V.</td>
+<td width="50%" valign="top">Piny <b>LM386</b> (widok z góry).</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/schematics/seal_cross_section.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/schematics/id_boot_pin.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>Uszczelnienie wałka</b> – tulejka 8×1,5 na wałku z D, simmering 8×16×5, komora odpływowa.</td>
+<td width="50%" valign="top"><b>Przycisk BOOT</b> – nóżkę GPIO9 (3,3 V) znajdziesz miernikiem.</td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/schematics/id_smd_resistors.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/schematics/id_smd_capacitor.png" width="100%"></td>
+</tr>
+<tr>
+<td width="50%" valign="top">Oznaczenia <b>rezystorów SMD</b> (4701 = 4,7 kΩ, 1001 = 1 kΩ).</td>
+<td width="50%" valign="top">Biegunowość <b>elektrolitów SMD</b> (czarne pole = minus).</td>
+</tr>
+</table>
 
 Pełna lista części (BOM), schematy, tabele połączeń, montaż i uszczelnienia: **[SpoolFilmProcessor_dokumentacja_v2.1.pdf](docs/pl/SpoolFilmProcessor_dokumentacja_v2.1.pdf)** (źródło: [docs/pl/schemat.html](docs/pl/schemat.html)).
 
