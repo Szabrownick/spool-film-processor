@@ -126,7 +126,7 @@ All screenshots are taken directly from the device (320×240 screen, scaled 2× 
 </tr>
 <tr>
 <td width="50%" valign="top"><b>First step:</b> “roll 6/16” at the top (chemistry usage check), estimated time of the whole process at the bottom.</td>
-<td width="50%" valign="top"><b>Pre-wash:</b> the probe measures the tap water in the tank. A fast drop means the water is being poured out – tank cooling is counted from that moment; a rise means it was refilled. Green = 38–45 °C.</td>
+<td width="50%" valign="top"><b>Pre-wash:</b> the probe measures the tap water in the tank. A drop of about 1 °C within a few seconds means the water is being poured out – tank cooling is counted from that moment; a rise means it was refilled. Green = 38–45 °C.</td>
 </tr>
 </table>
 
@@ -233,7 +233,7 @@ So if the chemistry cools down during the step, the step gets longer by exactly 
 With little chemistry (e.g. an upright Paterson with 3 reels) the probe does not reach the liquid and measures air. Then:
 
 - the **room temperature** is stored once, at the start;
-- during **pre-wash and rinses** the probe works as a **tap-water thermometer**: a fast drop (≥ 1 °C within 2 s) means the water is being poured out and tank cooling is counted from the start of the drop; a rise of 0.2 °C means the tank was refilled with water at the current reading; a colder tap setting is recognised because the reading levels off instead of falling towards room temperature; it shows the maximum and “steady” once the tank is full, and **beeps** when the water is too hot (> 45 °C) or too cold (< 38 °C);
+- during **pre-wash and rinses** the probe works as a **tap-water thermometer**: a drop of ≥ 1 °C within about 8 s (pouring out takes 6–7 s) means the water is being poured out and tank cooling is counted from the start of the drop; a rise of 0.2 °C means the tank was refilled with water at the current reading; a colder tap setting is recognised because the reading levels off instead of falling towards room temperature; it shows the maximum and “steady” once the tank is full, and **beeps** when the water is too hot (> 45 °C) or too cold (< 38 °C);
 - the **chemistry temperature is computed by a thermal model of the tank**: liquid ↔ walls and reels ↔ room. It includes natural convection (Churchill–Chu correlations for a vertical wall and a horizontal cylinder), radiation, conduction through the polystyrene wall and the water left in the tank. The model runs in real time, including while the empty tank waits for the chemistry;
 - example (500 ml, upright, room 21 °C, ADOX 3:15): tank after a 45 °C pre-wash → chemistry 38.0 → 37.7 °C, correction 0…+3 s. Cold tank → +33 s.
 

@@ -1126,29 +1126,30 @@ void runCaptureRoom() {
 // Stany (koreks pod kranem, zwykle pelny; wode mozna wylewac i nalewac ponownie):
 //  - PELNY:   sonda w wodzie -> temperatura wody = biezacy odczyt. Powolne zmiany
 //             (stygniecie, regulacja kranu) nie oznaczaja wylania.
-//  - WYLANA:  szybki spadek, co najmniej DRAIN_DROP C w ciagu DRAIN_WIN ms, gdy sonda
-//             byla w wodzie. Koreks pusty od POCZATKU spadku (ostatnie maksimum
-//             w oknie) - model liczy stygniecie od tej chwili, nie od DALEJ.
+//  - WYLANA:  spadek o co najmniej DRAIN_DROP C w ciagu DRAIN_WIN ms, gdy sonda byla
+//             w wodzie (wylewanie trwa 6-7 s, sonda reaguje z opoznieniem). Koreks
+//             pusty od POCZATKU spadku: ostatnia chwila, gdy odczyt stal na swoim
+//             poziomie (dec*) - model liczy stygniecie od tej chwili, nie od DALEJ.
 //  - NALANA:  po wylaniu wzrost o REFILL_RISE C od najnizszego odczytu = caly koreks
 //             znow pelny wody o temperaturze z biezacego odczytu.
-//  - CHLODNIEJSZA WODA (kran przestawiony z 46 na 43 C tez daje szybki spadek):
-//             po "wylaniu" odczyt przestaje spadac (< FLAT_DELTA w ~2 s), a sonda
+//  - CHLODNIEJSZA WODA (kran przestawiony z 46 na 43 C tez daje spadek):
+//             po "wylaniu" odczyt przestaje spadac (< FLAT_DELTA w FLAT_WIN), a sonda
 //             ma wciaz > room + 5 C -> to woda, nie powietrze: koreks pelny,
 //             stygniecie policzone od "wylania" jest cofane. Mokra sonda w powietrzu
 //             dalej spada w strone temperatury pokoju.
-//  - WOLNA SONDA (w powietrzu stygnie powoli i nie daje 1 C / 2 s):
-//             a) odczyt wrocil w okolice pokoju (brak kontaktu) -> pusty od poczatku
-//                biezacego spadku (decStart),
-//             b) DALEJ, gdy odczyt juz opadal -> pusty od decStart (runNextStep).
-// Odczyty DS18B20 (12 bit) przychodza co ok. 0,8 s, wiec okno 2 s to 2-3 probki.
-// Progi sprawdzone symulacja (sonda w wodzie tau ~3 s, w powietrzu 8-90 s).
+//  - ZABEZPIECZENIA: odczyt wrocil w okolice pokoju (brak kontaktu) -> pusty od
+//             poczatku spadku; DALEJ, gdy odczyt juz opadal -> to samo (runNextStep).
+// Odczyty DS18B20 (12 bit) przychodza co ok. 0,8 s; historia 20 probek = ok. 14 s.
+// Progi sprawdzone symulacja: sonda w wodzie tau ~3 s, w powietrzu 10-90 s.
 #define DRAIN_DROP  1.0f
-#define DRAIN_WIN   2000
+#define DRAIN_WIN   8000
 #define REFILL_RISE 0.2f
-#define FLAT_DELTA  0.25f
+#define FLAT_DELTA  0.15f
+#define FLAT_WIN    4000
+#define WT_HIST     20
 struct WaterSample { uint32_t t; float T, wall; };
 struct WaterTrack {
-  WaterSample hist[8];        // ostatnie probki (czas, odczyt, temperatura koreksu z modelu)
+  WaterSample hist[WT_HIST];  // ostatnie probki (czas, odczyt, temperatura koreksu z modelu)
   uint8_t nHist = 0;
   float lo = 199;             // najnizszy odczyt od wylania
   float last = NAN;           // temperatura wody tuz przed ostatnim wylaniem
@@ -1177,9 +1178,9 @@ void waterUpdate() {
   if (!thermo.valid) return;
   float T = thermo.t, Ta = roomTemp();
   uint32_t now = millis();
-  // nowa probka tylko gdy zmienil sie odczyt albo minelo 0,5 s
-  if (!wt.nHist || wt.hist[wt.nHist - 1].T != T || now - wt.hist[wt.nHist - 1].t > 500) {
-    if (wt.nHist == 8) { memmove(wt.hist, wt.hist + 1, sizeof(WaterSample) * 7); wt.nHist = 7; }
+  // nowa probka co ok. 0,7 s (tempo odczytow DS18B20)
+  if (!wt.nHist || now - wt.hist[wt.nHist - 1].t >= 700) {
+    if (wt.nHist == WT_HIST) { memmove(wt.hist, wt.hist + 1, sizeof(WaterSample) * (WT_HIST - 1)); wt.nHist = WT_HIST - 1; }
     wt.hist[wt.nHist++] = {now, T, run.Twall};
   }
   wt.contact = fabsf(T - Ta) > 2.0f;
@@ -1188,23 +1189,23 @@ void waterUpdate() {
     if (wt.contact) wt.everFull = true;
     // poczatek biezacego spadku: ostatnia chwila, gdy odczyt nie byl ponizej poziomu
     if (T >= wt.decT - 0.1f) { wt.decT = T; wt.decAt = now; wt.decWall = run.Twall; }
-    // szybki spadek w oknie DRAIN_WIN = wylewanie; poczatek = maksimum w oknie
+    // spadek o DRAIN_DROP wzgledem maksimum z okna DRAIN_WIN = wylewanie
     int iMax = -1;
     for (int i = 0; i < wt.nHist; i++)
       if (now - wt.hist[i].t <= DRAIN_WIN && (iMax < 0 || wt.hist[i].T > wt.hist[iMax].T)) iMax = i;
     if (wt.everFull && iMax >= 0 && wt.hist[iMax].T - T >= DRAIN_DROP && wt.hist[iMax].T > Ta + 2.0f)
-      waterDrain(wt.hist[iMax].T, wt.hist[iMax].t, wt.hist[iMax].wall, now, T);
-    else if (wt.everFull && !wt.contact)            // wolna sonda: wrocila do temperatury pokoju
+      waterDrain(wt.decT, wt.decAt, wt.decWall, now, T);   // pusty od poczatku spadku
+    else if (wt.everFull && !wt.contact)            // sonda wrocila do temperatury pokoju
       waterDrain(wt.decT, wt.decAt, wt.decWall, now, T);
   } else {
     if (T < wt.lo) wt.lo = T;
-    int iOld = -1;                                  // probka sprzed ok. 2 s
+    int iOld = -1;                                  // probka sprzed ok. FLAT_WIN
     for (int i = 0; i < wt.nHist; i++)
-      if (now - wt.hist[i].t >= 2000 && now - wt.hist[i].t <= 2800) iOld = i;
+      if (now - wt.hist[i].t >= FLAT_WIN && now - wt.hist[i].t <= FLAT_WIN + 800) iOld = i;
     if (T >= wt.lo + REFILL_RISE && wt.contact) {   // nalana - koreks znow pelny
       wt.falling = false;
       wt.decT = T; wt.decAt = now; wt.decWall = run.Twall;
-    } else if (iOld >= 0 && now - wt.detAt >= 2400 && T > Ta + 5.0f && fabsf(T - wt.hist[iOld].T) < FLAT_DELTA) {
+    } else if (iOld >= 0 && now - wt.detAt >= FLAT_WIN && T > Ta + 5.0f && fabsf(T - wt.hist[iOld].T) < FLAT_DELTA) {
       wt.falling = false; wt.undoDrain = true;      // odczyt sie wyplaszczyl w cieple: chlodniejsza woda
       wt.decT = T; wt.decAt = now; wt.decWall = wt.wallAtDrain;
     }

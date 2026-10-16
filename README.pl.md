@@ -126,7 +126,7 @@ Zrzuty ekranu pochodzą prosto z urządzenia (ekran 320×240, na zrzutach powię
 </tr>
 <tr>
 <td width="50%" valign="top"><b>Pierwszy krok:</b> u góry „rolka 6/16” (kontrola zużycia chemii), na dole szacowany czas całego procesu.</td>
-<td width="50%" valign="top"><b>Kąpiel wstępna:</b> czujnik mierzy wodę z kranu w koreksie. Szybki spadek oznacza wylewanie i od tej chwili liczy się stygnięcie koreksu, a wzrost – ponowne nalanie. Kolor zielony oznacza zakres 38–45 °C.</td>
+<td width="50%" valign="top"><b>Kąpiel wstępna:</b> czujnik mierzy wodę z kranu w koreksie. Spadek o ok. 1 °C w ciągu kilku sekund oznacza wylewanie i od tej chwili liczy się stygnięcie koreksu, a wzrost – ponowne nalanie. Kolor zielony oznacza zakres 38–45 °C.</td>
 </tr>
 </table>
 
@@ -231,7 +231,7 @@ Jeśli chemia w trakcie kroku stygnie, krok wydłuża się dokładnie o tyle, il
 Przy małej ilości chemii (np. Paterson na stojąco z 3 rolkami) sonda nie sięga cieczy i mierzy powietrze. Wtedy:
 
 - **temperatura pokoju** jest zapisywana raz, na starcie;
-- w **kąpieli wstępnej i płukaniu** sonda działa jak **termometr wody z kranu**: szybki spadek (≥ 1 °C w 2 s) oznacza wylewanie i stygnięcie koreksu liczy się od początku spadku; wzrost o 0,2 °C oznacza nalanie wody o bieżącej temperaturze; chłodniejszą wodę z kranu rozpoznaje po tym, że odczyt się wypłaszcza zamiast spadać w stronę temperatury pokoju; pokazuje maksimum i „ustalona”, gdy koreks jest pełny, i **pika**, gdy woda jest za gorąca (> 45 °C) albo za zimna (< 38 °C);
+- w **kąpieli wstępnej i płukaniu** sonda działa jak **termometr wody z kranu**: spadek o ≥ 1 °C w ciągu ok. 8 s (wylewanie trwa 6–7 s) oznacza wylewanie i stygnięcie koreksu liczy się od początku spadku; wzrost o 0,2 °C oznacza nalanie wody o bieżącej temperaturze; chłodniejszą wodę z kranu rozpoznaje po tym, że odczyt się wypłaszcza zamiast spadać w stronę temperatury pokoju; pokazuje maksimum i „ustalona”, gdy koreks jest pełny, i **pika**, gdy woda jest za gorąca (> 45 °C) albo za zimna (< 38 °C);
 - **temperaturę chemii liczy model cieplny koreksu**: ciecz ↔ ścianki i spirale ↔ pokój. Uwzględnia konwekcję naturalną (korelacje Churchilla–Chu dla ściany pionowej i walca poziomego), promieniowanie, przewodzenie przez ściankę z polistyrenu oraz wodę pozostałą w koreksie. Model działa w czasie rzeczywistym, także gdy pusty koreks czeka na chemię;
 - przykład (500 ml, pionowo, pokój 21 °C, ADOX 3:15): koreks po kąpieli wodą 45 °C → chemia 38,0 → 37,7 °C, korekta 0…+3 s. Zimny koreks → +33 s.
 
