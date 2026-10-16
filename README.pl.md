@@ -128,6 +128,14 @@ Zrzuty ekranu pochodzą prosto z urządzenia (ekran 320×240, na zrzutach powię
 <td width="50%" valign="top"><b>Pierwszy krok:</b> u góry „rolka 6/16” (kontrola zużycia chemii), na dole szacowany czas całego procesu.</td>
 <td width="50%" valign="top"><b>Kąpiel wstępna:</b> czujnik mierzy wodę z kranu w koreksie. Spadek o ok. 1 °C w ciągu kilku sekund oznacza wylewanie i od tej chwili liczy się stygnięcie koreksu, a wzrost – ponowne nalanie. Kolor zielony oznacza zakres 38–45 °C.</td>
 </tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/08g_water_drained.png" width="100%"></td>
+<td width="50%" valign="top"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>Wylana:</b> temperatura ostatniej wody i jak długo koreks stoi pusty; model cieplny liczy stygnięcie koreksu od początku wylewania.</td>
+<td width="50%" valign="top"></td>
+</tr>
 </table>
 
 ### W trakcie procesu

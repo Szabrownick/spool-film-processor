@@ -128,6 +128,14 @@ All screenshots are taken directly from the device (320×240 screen, scaled 2× 
 <td width="50%" valign="top"><b>First step:</b> “roll 6/16” at the top (chemistry usage check), estimated time of the whole process at the bottom.</td>
 <td width="50%" valign="top"><b>Pre-wash:</b> the probe measures the tap water in the tank. A drop of about 1 °C within a few seconds means the water is being poured out – tank cooling is counted from that moment; a rise means it was refilled. Green = 38–45 °C.</td>
 </tr>
+<tr>
+<td width="50%" valign="top" align="center"><img src="docs/screens/08g_water_drained.png" width="100%"></td>
+<td width="50%" valign="top"></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><b>Drained:</b> the last water temperature and how long the tank has been empty; the thermal model counts tank cooling from the start of pouring out.</td>
+<td width="50%" valign="top"></td>
+</tr>
 </table>
 
 ### During the process
@@ -212,7 +220,7 @@ All screenshots are taken directly from the device (320×240 screen, scaled 2× 
 </tr>
 </table>
 
-*Screenshots were taken on v2.0; newer versions differ in the version number and in the pre-wash panel (water / drained / waiting states).*
+*Screenshots taken on the device running v2.2.*
 
 ---
 
