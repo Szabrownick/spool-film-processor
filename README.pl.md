@@ -4,7 +4,7 @@
 
 Samodzielnie zbudowany procesor do wywoływania filmów (C-41, B&W, E-6, ECN-2, RA-4). Mieszaniem w koreksie steruje silnik krokowy. Całą obsługę zapewnia mały ekran dotykowy (2,4", ok. 49×38 mm). Program sam pilnuje czasu kroków i koryguje go według temperatury chemii i jej zużycia.
 
-**Wersja programu: v2.1**
+**Wersja programu: v2.2**
 
 <p align="center">
   <img src="docs/screens/00_intro.png" width="320" alt="Ekran startowy">
@@ -239,6 +239,7 @@ Przy małej ilości chemii (np. Paterson na stojąco z 3 rolkami) sonda nie się
 
 - 8 programów fabrycznych (C-41 Tetenal / Cinestill / ADOX, B&W, E-6, ECN-2, RA-4) i 4 własne (kopiowanie z fabrycznych).
 - Mieszanie **ROLL** (obroty w prawo i w lewo), **STICK**, **STAND** (stand development) albo brak.
+- ROLL przy pionowym koreksie: **start intensywny** (zmiana kierunku co 2 s przez pierwsze 30 s, zgodnie z zaleceniem ADOX dla pierwszych 30 s), **burst** (4 szybkie nawroty co 30 s), który miesza ciecz także w pionie, oraz **łagodny rozruch** (0 → 60 obr/min w 1,5 s) przy każdym ruszaniu z miejsca. Ustawienia → Agitacja ROLL.
 - Kontrola czasu kroku: krzywa temperaturowa, **MON** (tylko podgląd zakresu) albo wyłączona.
 - Wszystko jest zapisywane w pamięci płytki: ustawienia, kalibracja, programy, zużycie chemii i ostatni wybór.
 - Komendy przez port szeregowy (115200): `i` informacje, `t` temperatura, `r`/`s` silnik, `a`/`f`/`h`/`c` dźwięki, `K` tabela modelu cieplnego, `P` zrzuty ekranu.
@@ -260,7 +261,7 @@ Płytka ma wyprowadzone tylko dwa wolne piny: GPIO21 steruje silnikiem (UART), a
 
 ### Schematy budowy
 
-Z [dokumentacji PDF](docs/pl/SpoolFilmProcessor_dokumentacja_v2.1.pdf) (podpisy na rysunkach po angielsku).
+Z [dokumentacji PDF](docs/pl/SpoolFilmProcessor_dokumentacja_v2.2.pdf) (podpisy na rysunkach po angielsku).
 
 **Połączenia główne** – ESP32-C3, TMC2209, DS18B20, XL6009, moduł ładowania, akumulator:
 
@@ -297,7 +298,7 @@ Z [dokumentacji PDF](docs/pl/SpoolFilmProcessor_dokumentacja_v2.1.pdf) (podpisy 
 </tr>
 </table>
 
-Pełna lista części (BOM), schematy, tabele połączeń, montaż i uszczelnienia: **[SpoolFilmProcessor_dokumentacja_v2.1.pdf](docs/pl/SpoolFilmProcessor_dokumentacja_v2.1.pdf)** (źródło: [docs/pl/schemat.html](docs/pl/schemat.html)).
+Pełna lista części (BOM), schematy, tabele połączeń, montaż i uszczelnienia: **[SpoolFilmProcessor_dokumentacja_v2.2.pdf](docs/pl/SpoolFilmProcessor_dokumentacja_v2.2.pdf)** (źródło: [docs/pl/schemat.html](docs/pl/schemat.html)).
 
 ---
 
@@ -305,10 +306,10 @@ Pełna lista części (BOM), schematy, tabele połączeń, montaż i uszczelnien
 
 | Sposób | Plik | Ustawienia na płytce |
 |---|---|---|
-| Arduino IDE | folder [SpoolFilmProcessor](SpoolFilmProcessor) albo [SpoolFilmProcessor_v2.1_ArduinoIDE.zip](firmware/SpoolFilmProcessor_v2.1_ArduinoIDE.zip) | zostają |
-| WiFi (Ustawienia → Aktualizacja WiFi, sieć `FilmProcessor`, http://192.168.4.1) | [firmware/SpoolFilmProcessor_v2.1_update.bin](firmware/SpoolFilmProcessor_v2.1_update.bin) | zostają |
+| Arduino IDE | folder [SpoolFilmProcessor](SpoolFilmProcessor) albo [SpoolFilmProcessor_v2.2_ArduinoIDE.zip](firmware/SpoolFilmProcessor_v2.2_ArduinoIDE.zip) | zostają |
+| WiFi (Ustawienia → Aktualizacja WiFi, sieć `FilmProcessor`, http://192.168.4.1) | [firmware/SpoolFilmProcessor_v2.2_update.bin](firmware/SpoolFilmProcessor_v2.2_update.bin) | zostają |
 | USB, aktualizacja | `firmware/flash_update.bat` | zostają |
-| USB, nowa płytka (adres 0x0) | `firmware/flash_full.bat` / [SpoolFilmProcessor_v2.1_full.bin](firmware/SpoolFilmProcessor_v2.1_full.bin) | kasowane |
+| USB, nowa płytka (adres 0x0) | `firmware/flash_full.bat` / [SpoolFilmProcessor_v2.2_full.bin](firmware/SpoolFilmProcessor_v2.2_full.bin) | kasowane |
 
 Pliki `.bat` potrzebują `esptool.exe` w folderze `firmware`. Pobierz `esptool-windows-amd64.zip` z [espressif/esptool releases](https://github.com/espressif/esptool/releases). Nową płytkę można też wgrać bez `.bat`: [esptool-js](https://espressif.github.io/esptool-js/) w Chrome lub Edge, adres `0x0`.
 

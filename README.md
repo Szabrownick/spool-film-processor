@@ -4,7 +4,7 @@
 
 A DIY film developing processor (C-41, B&W, E-6, ECN-2, RA-4). A stepper motor agitates the reels inside the tank, and everything is controlled from a small 2.4" touch screen (about 49×38 mm). The firmware times every step and corrects the time live for chemistry temperature and chemistry reuse.
 
-**Firmware version: v2.1**
+**Firmware version: v2.2**
 
 <p align="center">
   <img src="docs/screens/00_intro.png" width="320" alt="Boot screen">
@@ -212,7 +212,7 @@ All screenshots are taken directly from the device (320×240 screen, scaled 2× 
 </tr>
 </table>
 
-*The boot and Info screenshots were taken on v2.0; v2.1 only differs in the version number.*
+*Screenshots were taken on v2.0; newer versions differ in the version number and in the pre-wash panel (water / drained / waiting states).*
 
 ---
 
@@ -241,6 +241,7 @@ With little chemistry (e.g. an upright Paterson with 3 reels) the probe does not
 
 - 8 factory programs (C-41 Tetenal / Cinestill / ADOX, B&W, E-6, ECN-2, RA-4) and 4 custom ones (copied from factory programs).
 - Agitation **ROLL** (alternating directions), **STICK**, **STAND** (stand development) or none.
+- ROLL for an upright tank: **intense start** (direction change every 2 s for the first 30 s, as ADOX recommends for the first 30 s), **bursts** (4 quick reversals every 30 s) that also mix the liquid vertically, and a **soft start** (0 → 60 rpm in 1.5 s) whenever the motor starts from standstill. Settings → ROLL agitation.
 - Step time control: temperature curve, **MON** (range monitor only) or off.
 - Everything is stored on the board: settings, calibration, programs, chemistry usage and the last choice.
 - Serial commands (115200 baud): `i` info, `t` temperature, `r`/`s` motor, `a`/`f`/`h`/`c` sounds, `K` thermal model table, `P` screenshots, `L` toggle language.
@@ -262,7 +263,7 @@ The board exposes only two free pins: GPIO21 drives the motor (UART) and GPIO20 
 
 ### Build diagrams
 
-From the [documentation PDF](SpoolFilmProcessor_documentation_v2.1.pdf).
+From the [documentation PDF](SpoolFilmProcessor_documentation_v2.2.pdf).
 
 **Main wiring** – ESP32-C3, TMC2209, DS18B20, XL6009, charger module, battery:
 
@@ -299,7 +300,7 @@ From the [documentation PDF](SpoolFilmProcessor_documentation_v2.1.pdf).
 </tr>
 </table>
 
-Full bill of materials, schematics, wiring tables, assembly and sealing details: **[SpoolFilmProcessor_documentation_v2.1.pdf](SpoolFilmProcessor_documentation_v2.1.pdf)** (source: [documentation.html](documentation.html); Polish version in [docs/pl](docs/pl)).
+Full bill of materials, schematics, wiring tables, assembly and sealing details: **[SpoolFilmProcessor_documentation_v2.2.pdf](SpoolFilmProcessor_documentation_v2.2.pdf)** (source: [documentation.html](documentation.html); Polish version in [docs/pl](docs/pl)).
 
 ---
 
@@ -307,10 +308,10 @@ Full bill of materials, schematics, wiring tables, assembly and sealing details:
 
 | Method | File | Settings on the board |
 |---|---|---|
-| Arduino IDE | folder [SpoolFilmProcessor](SpoolFilmProcessor) or [SpoolFilmProcessor_v2.1_ArduinoIDE.zip](firmware/SpoolFilmProcessor_v2.1_ArduinoIDE.zip) | kept |
-| WiFi (Settings → WiFi update, network `FilmProcessor`, http://192.168.4.1) | [firmware/SpoolFilmProcessor_v2.1_update.bin](firmware/SpoolFilmProcessor_v2.1_update.bin) | kept |
+| Arduino IDE | folder [SpoolFilmProcessor](SpoolFilmProcessor) or [SpoolFilmProcessor_v2.2_ArduinoIDE.zip](firmware/SpoolFilmProcessor_v2.2_ArduinoIDE.zip) | kept |
+| WiFi (Settings → WiFi update, network `FilmProcessor`, http://192.168.4.1) | [firmware/SpoolFilmProcessor_v2.2_update.bin](firmware/SpoolFilmProcessor_v2.2_update.bin) | kept |
 | USB, update | `firmware/flash_update.bat` | kept |
-| USB, new board (address 0x0) | `firmware/flash_full.bat` / [SpoolFilmProcessor_v2.1_full.bin](firmware/SpoolFilmProcessor_v2.1_full.bin) | erased |
+| USB, new board (address 0x0) | `firmware/flash_full.bat` / [SpoolFilmProcessor_v2.2_full.bin](firmware/SpoolFilmProcessor_v2.2_full.bin) | erased |
 
 The `.bat` scripts need `esptool.exe` in the `firmware` folder – download `esptool-windows-amd64.zip` from [espressif/esptool releases](https://github.com/espressif/esptool/releases). A new board can also be flashed without the scripts: [esptool-js](https://espressif.github.io/esptool-js/) in Chrome or Edge, address `0x0`.
 
@@ -325,7 +326,7 @@ SpoolFilmProcessor/   source code (Arduino)
 firmware/           ready-made .bin files, flashing scripts, Arduino IDE ZIP
 docs/screens/       screenshots from the device
 documentation.html  documentation (BOM, schematics, assembly, seals, usage)
-SpoolFilmProcessor_documentation_v2.1.pdf
+SpoolFilmProcessor_documentation_v2.2.pdf
 INSTRUCTIONS.md     environment setup, flashing and testing, step by step
 docs/photos/        photos of the build and the Fusion 360 model
 docs/schematics/    build diagrams (wiring, speaker, pinouts, shaft seal)

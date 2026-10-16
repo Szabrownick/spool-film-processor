@@ -60,6 +60,13 @@
 #define GEAR_RATIO         1.0f    // obroty silnika na 1 obrot koreksu (przekladnia)
 #define MOTOR_INVERT       false   // true = odwraca kierunek obrotow
 #define MOTOR_ACCEL_RPM_S  150.0f  // przyspieszenie [obr/min na sekunde]
+#define MOTOR_SOFT_ACCEL_RPM_S 40.0f // lagodny rozruch z miejsca: 0 -> 60 obr/min w 1,5 s
+// Zmiany kierunku w ROLL: przy 150 obr/min/s nawrot 60 -> -60 obr/min trwa 0,8 s
+// (lagodnie dla mieszadla, sprzegla i spiral; moment bezwladnosci spiral z ciecza
+// to ulamek momentu silnika). Odcinek musi byc dluzszy niz nawrot, inaczej silnik
+// nie zdazy rozpedzic sie w druga strone.
+#define ROLL_START_FLIP    2.0f    // start intensywny: zmiana kierunku co 2 s
+#define ROLL_BURST_SEG     1.5f    // burst: jeden odcinek (0,8 s nawrot + 0,7 s obrotow)
 
 // ---------------------------------------------------------------------
 //  Zakresy

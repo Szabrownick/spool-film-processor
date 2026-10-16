@@ -871,6 +871,10 @@ void buildMenu() {
       addItem(TR("Predkosc", "Speed"), IT_INT, &S.rollRpm, RPM_MIN, RPM_MAX, 5, "rpm");
       addItem(TR("T1 w prawo", "T1 clockwise"), IT_INT, &S.rollT1, 1, 120, 1, "s");
       addItem(TR("T2 w lewo", "T2 counter-cw"), IT_INT, &S.rollT2, 0, 120, 1, "s");
+      // pionowy koreks: zawirowania od zmian kierunku mieszaja ciecz tez w pionie
+      addItem(TR("Start intensywny", "Intense start"), IT_INT, &rollStartSec, 0, 120, 5, "s");
+      addItem(TR("Burst co (0=wyl)", "Burst every (0=off)"), IT_INT, &rollBurstSec, 0, 120, 5, "s");
+      addItem(TR("Zmian w burscie", "Burst reversals"), IT_INT, &rollBurstN, 1, 8, 1, "x");
       break;
     case M_STICK:
       addItem(TR("Predkosc", "Speed"), IT_INT, &S.stickRpm, RPM_MIN, RPM_MAX, 5, "rpm");
@@ -2204,6 +2208,7 @@ void doConfirm() {
     case CA_RESET_SETTINGS:
     case CA_FACTORY:
       settingsDefault(S, true);
+      rollStartSec = 30; rollBurstSec = 30; rollBurstN = 4;   // dodatkowe ustawienia ROLL
       saveSettings();
       if (confirmAct == CA_FACTORY) for (int i = 0; i < NUM_PROGS; i++) resetProgram(i);
       backlightSet(S.brightness); lcd.setRotation(1);

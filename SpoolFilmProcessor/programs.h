@@ -199,9 +199,15 @@ void settingsDefault(Settings &s, bool keepTouch) {
   else { s.cal = TouchCal(); s.touchSda = -1; s.touchScl = -1; }
 }
 
+// Dodatkowe ustawienia ROLL (start intensywny, burst) - osobne klucze w pamieci,
+// bo blok Settings ma stale 64 bajty (zmiana rozmiaru skasowalaby kalibracje)
+int16_t rollStartSec = 30;    // ADOX C-TEC 41: pierwsze 30 s mieszac intensywnie
+int16_t rollBurstSec = 30;    // co 30 s seria zmian kierunku
+int16_t rollBurstN = 4;       // 4 zmiany kierunku w serii
 AgitParams agitParams() {
   AgitParams p;
   p.rollRpm = S.rollRpm;   p.rollT1 = S.rollT1;   p.rollT2 = S.rollT2;
+  p.rollStartSec = rollStartSec; p.rollBurstSec = rollBurstSec; p.rollBurstN = rollBurstN;
   p.stickRpm = S.stickRpm; p.stickT1 = S.stickT1; p.stickT2 = S.stickT2;
   p.standRpm = S.standRpm; p.standT1min = S.standT1; p.standT2 = S.standT2; p.standT3 = S.standT3;
   return p;
@@ -276,7 +282,10 @@ KitStepType kitStepType(const Step &s) {
     default: return KS_NONE;
   }
 }
-void saveSettings() { prefs.putBytes("set", &S, sizeof(Settings)); }
+void saveSettings() {
+  prefs.putBytes("set", &S, sizeof(Settings));
+  prefs.putShort("rS", rollStartSec); prefs.putShort("rB", rollBurstSec); prefs.putShort("rN", rollBurstN);
+}
 
 void saveChem(int idx);
 void chemDefault(int idx);
@@ -286,6 +295,9 @@ void storageBegin() {
   prefs.begin("filmproc", false);
   if (prefs.getBytesLength("set") == sizeof(Settings)) prefs.getBytes("set", &S, sizeof(Settings));
   if (S.magic != SET_MAGIC) { S.touchSda = -1; S.touchScl = -1; settingsDefault(S, false); }
+  rollStartSec = constrain((int)prefs.getShort("rS", 30), 0, 120);
+  rollBurstSec = constrain((int)prefs.getShort("rB", 30), 0, 120);
+  rollBurstN = constrain((int)prefs.getShort("rN", 4), 1, 8);
   for (int i = 0; i < NUM_PROGS; i++) {
     char k[6]; progKey(i, k);
     bool ok = prefs.getBytesLength(k) == sizeof(Program) && prefs.getBytes(k, &progs[i], sizeof(Program)) &&

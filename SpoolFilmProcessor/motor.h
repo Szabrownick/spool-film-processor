@@ -113,7 +113,13 @@ public:
       tmc.configure(currentmA, true);
       lastCfg = now;
     }
-    float step = MOTOR_ACCEL_RPM_S * dt / 1000.0f;
+    // lagodny rozruch: ruszanie z miejsca (start kroku, po pauzie, po postoju)
+    // z mniejszym przyspieszeniem, dopiero po osiagnieciu predkosci - normalne
+    // (nawrot +60 -> -60 przechodzi przez zero, ale cel nigdy nie jest 0 - bez lagodnego)
+    if (target != 0 && lastTarget == 0 && fabsf(cur) < 1.0f) softStart = true;
+    lastTarget = target;
+    if (softStart && (target == 0 || fabsf(cur) >= fabsf(target) - 0.5f)) softStart = false;
+    float step = (softStart ? MOTOR_SOFT_ACCEL_RPM_S : MOTOR_ACCEL_RPM_S) * dt / 1000.0f;
     float prev = cur;
     if (cur < target) cur = min(cur + step, target);
     else if (cur > target) cur = max(cur - step, target);
@@ -136,8 +142,8 @@ public:
   void reconfigure() { tmc.configure(currentmA, enabled); }
 
 private:
-  float target = 0, cur = 0;
-  bool enabled = false;
+  float target = 0, cur = 0, lastTarget = 0;
+  bool enabled = false, softStart = false;
   uint32_t lastMs = 0, lastCfg = 0, stopSince = 0;
 };
 
@@ -157,6 +163,11 @@ struct AgitParams {           // wypelniane z ustawien
   int16_t rollRpm, rollT1, rollT2;
   int16_t stickRpm, stickT1, stickT2;
   int16_t standRpm, standT1min, standT2, standT3;
+  // ROLL - mieszanie przy pionowym koreksie (ciecz miesza sie glownie poziomo,
+  // przy dnie zbiera sie zuzyta chemia -> smugi od perforacji na dolnym brzegu):
+  int16_t rollStartSec;       // poczatek kroku: zmiana kierunku co ROLL_START_FLIP s (ADOX: 30 s)
+  int16_t rollBurstSec;       // co ile s seria szybkich zmian kierunku (0 = wyl.)
+  int16_t rollBurstN;         // ile zmian kierunku w serii (kazda ROLL_BURST_SEG s)
 };
 
 class Agitator {
@@ -177,8 +188,26 @@ public:
     float rpm = 0;
     switch (mode) {
       case AG_ROLL: {
+        // 1) start intensywny: czeste zmiany kierunku (zawirowania mieszaja ciecz
+        //    takze w pionie; ADOX: pierwsze 30 s ciagle, intensywniej)
+        if (t < par.rollStartSec) {
+          rpm = ((int)(t / ROLL_START_FLIP) & 1) ? -par.rollRpm : par.rollRpm;
+          break;
+        }
+        float tt = t - par.rollStartSec;
+        // 2) burst na koncu kazdego okresu rollBurstSec: rollBurstN zmian kierunku
+        if (par.rollBurstSec > 0 && par.rollBurstN > 0) {
+          float len = par.rollBurstN * ROLL_BURST_SEG;
+          float ph = fmodf(tt, (float)par.rollBurstSec);
+          if (len < par.rollBurstSec && ph >= par.rollBurstSec - len) {
+            int k = (int)((ph - (par.rollBurstSec - len)) / ROLL_BURST_SEG);
+            rpm = (k & 1) ? -par.rollRpm : par.rollRpm;
+            break;
+          }
+        }
+        // 3) normalnie: T1 s w prawo, T2 s w lewo
         float cyc = max(1, (int)par.rollT1 + (int)par.rollT2);
-        float ph = fmodf(t, cyc);
+        float ph = fmodf(tt, cyc);
         rpm = (ph < par.rollT1) ? par.rollRpm : -par.rollRpm;
         break;
       }
