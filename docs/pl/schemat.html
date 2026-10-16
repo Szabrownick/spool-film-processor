@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Schemat Film Processor</title>
+<style>
+:root{
+  --bg:#f6f4f0;--card:#ffffff;--ink:#1d1d1f;--mut:#5d5d63;--line:#d9d5ce;
+  --blk:#2b2b30;--blkTxt:#f2f2f2;
+  --w5v:#d62828;--w12:#ee7a00;--w33:#7b3fbf;--gnd:#222;--uart:#1f6fd1;--ow:#1a9a4a;--aud:#555;
+  --accent:#ff4d00;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141416;--card:#1e1e22;--ink:#ececef;--mut:#a3a3ab;--line:#33333a;--blk:#2c2c33;--gnd:#d0d0d0;--aud:#aaa}}
+:root[data-theme="dark"]{--bg:#141416;--card:#1e1e22;--ink:#ececef;--mut:#a3a3ab;--line:#33333a;--blk:#2c2c33;--gnd:#d0d0d0;--aud:#aaa}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+main{max-width:1180px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:26px;margin:0 0 4px}h2{font-size:20px;margin:36px 0 10px;border-bottom:2px solid var(--accent);padding-bottom:4px}
+h3{font-size:16px;margin:20px 0 6px}
+.sub{color:var(--mut);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto}
+svg{display:block;width:100%;height:auto}
+.big{min-width:820px}
+svg text{font-family:system-ui,Segoe UI,Roboto,sans-serif;fill:var(--ink)}
+.blk{fill:var(--blk);stroke:#000;stroke-width:1.5}
+.blkT{fill:var(--blkTxt)!important;font-weight:600}
+.pin{fill:#e8c34a;stroke:#000;stroke-width:1}
+.pl{font-size:12px;fill:var(--blkTxt)!important}
+.w{fill:none;stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+.w5{stroke:var(--w5v)}.w12{stroke:var(--w12)}.w33{stroke:var(--w33)}.wg{stroke:var(--gnd)}.wu{stroke:var(--uart)}.wo{stroke:var(--ow)}.wa{stroke:var(--aud)}
+.tag{font-size:12px;font-weight:700}
+.lbl{font-size:14px;font-weight:700}
+.note{font-size:12px;fill:var(--mut)}
+table{border-collapse:collapse;width:100%;margin:6px 0 14px;font-size:14px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:rgba(127,127,127,.12)}
+code{background:rgba(127,127,127,.15);padding:1px 5px;border-radius:4px}
+.warn{border-left:4px solid var(--accent);background:rgba(255,77,0,.08);padding:10px 12px;border-radius:6px;margin:10px 0}
+.ok{border-left:4px solid #1a9a4a;background:rgba(26,154,74,.08);padding:10px 12px;border-radius:6px;margin:10px 0}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0 0;font-size:13px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:26px;height:4px;border-radius:2px;display:inline-block}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:900px){.grid,.grid3{grid-template-columns:1fr}}
+.cap{font-size:13px;color:var(--mut);margin:6px 0 0}
+ol li,ul li{margin:4px 0}
+.toc a{color:var(--accent);text-decoration:none;margin-right:14px;white-space:nowrap}
+.chg td{background:rgba(255,77,0,.10)}
+@page{size:A4;margin:12mm}
+@media print{
+  :root,:root[data-theme]{--bg:#fff;--card:#fff;--ink:#111;--mut:#444;--line:#ccc;--gnd:#222;--aud:#555;--blk:#2b2b30}
+  body{background:#fff;font-size:11.5px}
+  main{max-width:none;padding:0}
+  .big{min-width:0}
+  .card{overflow:visible;break-inside:avoid}
+  h2{break-before:page;margin-top:0}
+  h2#czesci{break-before:auto}
+  tr,svg,.card{break-inside:avoid}
+  .grid{grid-template-columns:1fr 1fr!important;gap:10px}
+  .grid3{grid-template-columns:1fr 1fr 1fr!important;gap:10px}
+  .toc a{color:#111}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<main>
+<h1>Film Processor DIY – schemat i montaż</h1>
+<p class="sub">ESP32-C3 + TFT 2,4" (msalamon EVB-00055) · TMC2209 · JK42HS48-1204 · DS18B20 · XL6009 · moduł ładowania USB-C · Li-ion 5000 mAh · LM386 + głośnik · <b>program v2.1</b> · 15.10.2026</p>
+<p class="toc"><a href="#czesci">1. BOM</a><a href="#glowny">2. Schemat główny</a><a href="#glosnik">3. Głośnik</a><a href="#widoki">4. Jak rozpoznać elementy</a><a href="#tabele">5. Tabele połączeń</a><a href="#montaz">6. Kolejność montażu</a><a href="#mechanika">7. Uszczelnienia</a><a href="#wgrywanie">8. Wgrywanie programu</a><a href="#obsluga">9. Obsługa</a></p>
+
+<div class="warn"><b>Zasada:</b> na złącze płytki wyprowadzone są tylko <b>GPIO21 (TXO)</b> i <b>GPIO20 (RXO)</b>. Silnik jest sterowany jednym przewodem (UART), a czujnik drugim (1-Wire). Przycisk <b>BOOT (GPIO9)</b> działa jako START i dodatkowo daje sygnał dla głośnika. Wszystko inne to zasilanie.</div>
+
+<!-- ================================================================ -->
+<h2 id="czesci">1. BOM – lista części</h2>
+<p class="cap">Stan na wersję programu <b>v2.1</b>. „AK-750S” = płytka-dawca, z której wylutowujesz drobne elementy. Rezystory i kondensatory można też kupić nowe (przewlekane): wartości są te same.</p>
+
+<h3>A. Moduły</h3>
+<table>
+<tr><th>Ozn.</th><th>Element</th><th>Typ / parametry</th><th>Szt.</th><th>Skąd</th><th>Uwagi</th></tr>
+<tr><td><b>MCU</b></td><td>płytka ESP32-C3 z ekranem</td><td>msalamon <b>EVB-00055</b>, TFT 2,4" ST7789 240×320, dotyk CST816</td><td>1</td><td>masz</td><td>wolne tylko GPIO20, GPIO21 (+ BOOT = GPIO9)</td></tr>
+<tr><td><b>DRV</b></td><td>sterownik silnika</td><td>TMC2209 <b>Tenstar V985</b></td><td>1</td><td>masz</td><td>+ radiator na układ</td></tr>
+<tr><td><b>M1</b></td><td>silnik krokowy</td><td><b>JK42HS48-1204</b> (NEMA17, 1,2 A, wałek 5 mm z pełnym ścięciem D)</td><td>1</td><td>masz</td><td>pracuje z prądem 600–700 mA</td></tr>
+<tr><td><b>TS</b></td><td>czujnik temperatury</td><td><b>DS18B20</b> wodoodporny, przewód 3 m</td><td>1</td><td>masz</td><td>czerwony VCC, żółty DATA, czarny GND</td></tr>
+<tr><td><b>BST</b></td><td>przetwornica step-up</td><td><b>XL6009</b>, ustawiona na 12,0 V</td><td>1</td><td>masz</td><td>ustaw napięcie przed podłączeniem sterownika</td></tr>
+<tr><td><b>CHG</b></td><td>moduł ładowania + 5 V</td><td>USB-C, wyjście <b>5 V 4 A</b></td><td>1</td><td>masz</td><td>ładuje akumulator i daje 5 V</td></tr>
+<tr><td><b>BAT</b></td><td>akumulator</td><td>Li-ion 3,7 V <b>5000 mAh</b></td><td>1</td><td>masz</td><td>ok. 3 h ciągłego mieszania przy 700 mA</td></tr>
+<tr><td><b>SW1</b></td><td>włącznik</td><td>hebelkowy / kołyskowy, <b>≥ 3 A</b></td><td>1</td><td><b>dokup</b></td><td>między modułem ładowania a resztą</td></tr>
+<tr><td><b>SP1</b></td><td>głośnik</td><td><b>14 Ω</b> z obudowy PC</td><td>1</td><td>masz</td><td>czerwony + czarny kabelek</td></tr>
+</table>
+
+<h3>B. Elementy elektroniczne</h3>
+<table>
+<tr><th>Ozn.</th><th>Wartość</th><th>Funkcja</th><th>Szt.</th><th>Skąd / oznaczenie</th></tr>
+<tr><td><b>R1</b></td><td>4,7 kΩ</td><td>podciągnięcie linii DS18B20 do 3,3 V</td><td>1</td><td>AK-750S, SMD <b>4701</b> · przewlekany: żółty-fiolet-czerwony</td></tr>
+<tr><td><b>R2</b></td><td>1 kΩ</td><td>GPIO21 → PDN sterownika (UART)</td><td>1</td><td>AK-750S, SMD <b>1001</b> · brąz-czarny-czerwony</td></tr>
+<tr><td><b>R5</b></td><td>10 kΩ</td><td>dzielnik wejścia LM386 (w szereg)</td><td>1</td><td>AK-750S, SMD <b>1002</b> · brąz-czarny-pomarańcz</td></tr>
+<tr><td><b>R6</b></td><td>470 Ω</td><td>dzielnik wejścia LM386 (do GND)</td><td>1</td><td>AK-750S, SMD <b>4700</b> · żółty-fiolet-brąz</td></tr>
+<tr class="chg"><td><b>R7</b></td><td><b>100 Ω</b> ≥ 0,25 W</td><td>wyjście LM386 → głośnik (<b>zamiast dawnego C4 100 µF</b>)</td><td>1</td><td>SMD <b>1000</b> / <b>101</b> · brąz-czarny-brąz</td></tr>
+<tr><td><b>C1</b></td><td>1000 µF 25 V</td><td>bufor zasilania silnika 12 V przy VM</td><td>1</td><td>AK-750S, duży przewlekany</td></tr>
+<tr><td><b>C2</b></td><td>2,2 µF 50 V</td><td>sprzężenie GPIO9 → LM386 (odcina napięcie stałe)</td><td>1</td><td>AK-750S, puszka „2.2 50V”</td></tr>
+<tr><td><b>C3</b></td><td>47 µF 25 V</td><td>filtr zasilania LM386 (nóżka 6)</td><td>1</td><td>AK-750S, puszka „47 25V”</td></tr>
+<tr><td><b>C5</b></td><td>10 µF 50 V</td><td>nóżka 7 LM386 – mniej szumu</td><td>1</td><td>AK-750S, puszka „10 50V”</td></tr>
+<tr><td><b>C6</b></td><td>10 µF 50 V</td><td>wzmocnienie LM386 200× (nóżki 1–8)</td><td>1</td><td>AK-750S, puszka „10 50V”</td></tr>
+<tr><td><b>U1</b></td><td>LM386 + podstawka DIP-8</td><td>wzmacniacz głośnika</td><td>1</td><td>pudełko z układami</td></tr>
+</table>
+
+<h3>C. Materiały montażowe</h3>
+<table>
+<tr><th>Element</th><th>Parametry</th><th>Ilość</th><th>Uwagi</th></tr>
+<tr><td>płytka uniwersalna</td><td>ok. 5×7 cm</td><td>1</td><td>na LM386 i drobne elementy</td></tr>
+<tr><td>przewody zasilające</td><td>silikonowe 18–20 AWG</td><td>~1 m</td><td>5 V, 12 V, GND silnika</td></tr>
+<tr><td>przewody sygnałowe</td><td>22–26 AWG</td><td>~2 m</td><td>UART, 1-Wire, audio, 3,3 V</td></tr>
+<tr><td>goldpiny / złącza JST</td><td>raster 2,54 mm</td><td>wg potrzeb</td><td>żeby moduły dało się odpiąć</td></tr>
+<tr><td>koszulki termokurczliwe</td><td>z klejem</td><td>zestaw</td><td>też na wyjście przewodu z silnika</td></tr>
+<tr><td>radiator</td><td>na TMC2209</td><td>1</td><td>klejony termicznie</td></tr>
+</table>
+
+<h3>D. Mechanika i uszczelnienia (rozdz. 7)</h3>
+<table>
+<tr><th>Element</th><th>Parametry</th><th>Szt.</th><th>Gdzie</th></tr>
+<tr><td><b>O-ring</b></td><td><b>131×3 NBR70</b> (ew. 131×3,5)</td><td>1 + zapas</td><td>rowek, w który wchodzi rant koreksu Paterson</td></tr>
+<tr><td><b>Simmering</b></td><td><b>8×16×5 TC</b>, najlepiej <b>FKM</b> (NBR też wystarczy)</td><td>2</td><td>przejście wałka przez front (jeden zapasowy)</td></tr>
+<tr><td><b>Tulejka</b></td><td>rurka nierdzewna <b>8×1,5 mm</b> (wewn. 5 mm), odcinek 12–15 mm</td><td>1</td><td>na wałek silnika – okrągła powierzchnia dla simmeringu</td></tr>
+<tr><td>klej epoksydowy</td><td>np. Distal</td><td>1</td><td>wklejenie tulejki (wypełnia ścięcie D)</td></tr>
+<tr><td>smar silikonowy</td><td>—</td><td>1</td><td>warga simmeringu, O-ringi</td></tr>
+<tr><td>łożysko (opcja)</td><td>688-2RS (8×16×5)</td><td>1</td><td>w to samo gniazdo Ø16 za simmeringiem</td></tr>
+<tr><td>filament</td><td><b>PETG</b> (front i części mokre), <b>PLA-CF</b> (tył)</td><td>—</td><td>PETG odporny na chemię i ciepło 38–45 °C</td></tr>
+<tr><td><i>alternatywa</i></td><td>magnesy neodymowe 10×5 mm N42–N52</td><td>8</td><td>sprzęgło magnetyczne zamiast simmeringu</td></tr>
+</table>
+<div class="ok">Do dokupienia: <b>SW1</b>, <b>O-ring 131×3</b>, <b>simmering 8×16×5 TC</b>, <b>rurka 8×1,5</b>, klej epoksydowy, smar silikonowy. Resztę masz. Każdy rezystor z płytki-dawcy przed użyciem <b>zmierz miernikiem</b>.</div>
+
+<!-- ================================================================ -->
+<h2 id="glowny">2. Schemat główny</h2>
+<div class="card">
+<svg class="big" viewBox="0 0 1160 810" role="img" aria-label="Schemat połączeń">
+  <!-- AKUMULATOR -->
+  <rect class="blk" x="30" y="575" width="190" height="105" rx="10"/>
+  <text class="blkT" x="125" y="620" text-anchor="middle" font-size="15">AKUMULATOR</text>
+  <text class="pl" x="125" y="642" text-anchor="middle">Li-ion 3,7 V 5000 mAh</text>
+  <circle class="pin" cx="75" cy="575" r="6"/><text class="pl" x="75" y="598" text-anchor="middle">+</text>
+  <circle class="pin" cx="170" cy="575" r="6"/><text class="pl" x="170" y="598" text-anchor="middle">–</text>
+  <!-- LADOWARKA -->
+  <rect class="blk" x="30" y="330" width="210" height="160" rx="10"/>
+  <text class="blkT" x="120" y="356" text-anchor="middle" font-size="15">MODUŁ ŁADOWANIA</text>
+  <text class="pl" x="110" y="396" text-anchor="middle">USB-C 5 V 4 A</text><text class="pl" x="110" y="414" text-anchor="middle">(USB-C = ładowanie)</text>
+  <circle class="pin" cx="75" cy="490" r="6"/><text class="pl" x="75" y="473" text-anchor="middle">B+</text>
+  <circle class="pin" cx="170" cy="490" r="6"/><text class="pl" x="170" y="473" text-anchor="middle">B–</text>
+  <circle class="pin" cx="240" cy="370" r="6"/><text class="pl" x="226" y="374" text-anchor="end">5V +</text>
+  <circle class="pin" cx="240" cy="440" r="6"/><text class="pl" x="226" y="444" text-anchor="end">5V –</text>
+  <circle class="pin" cx="135" cy="330" r="6"/><text class="note" x="150" y="322">K – przycisk (opcja)</text>
+  
+  <path class="w w5" d="M75 575 V490"/>
+  <path class="w wg" d="M170 575 V490"/>
+  <!-- WLACZNIK -->
+  <path class="w w5" d="M240 370 H280"/>
+  <circle cx="284" cy="370" r="4" fill="var(--ink)"/><circle cx="336" cy="370" r="4" fill="var(--ink)"/>
+  <path d="M286 368 L330 346" stroke="var(--ink)" stroke-width="3"/>
+  <text class="tag" x="310" y="338" text-anchor="middle">SW1 włącznik</text>
+  <path class="w w5" d="M340 370 H390"/>
+  <circle cx="390" cy="370" r="5" fill="var(--w5v)"/>
+  <text class="tag" x="398" y="392" style="fill:var(--w5v)">+5V</text>
+  <path class="w wg" d="M240 440 H262 V458"/>
+  <path d="M250 458 H274 M254 464 H270 M258 470 H266" stroke="var(--gnd)" stroke-width="2.5"/>
+  <!-- ESP32 -->
+  <rect class="blk" x="350" y="40" width="330" height="225" rx="10"/>
+  <text class="blkT" x="460" y="88" text-anchor="middle" font-size="16">ESP32-C3 + TFT 2,4"</text>
+  <text class="pl" x="460" y="110" text-anchor="middle">msalamon EVB-00055</text>
+  <text class="pl" x="460" y="128" text-anchor="middle">złącze 6-pin (goldpiny)</text>
+  <text class="pl" x="460" y="200" text-anchor="middle">BOOT = GPIO9</text>
+  <text class="pl" x="460" y="218" text-anchor="middle">(START + głośnik → rozdz. 3)</text>
+  <circle class="pin" cx="680" cy="80"  r="6"/><text class="pl" x="666" y="84"  text-anchor="end">GND</text>
+  <circle class="pin" cx="680" cy="110" r="6"/><text class="pl" x="666" y="114" text-anchor="end">RXO / GPIO20</text>
+  <circle class="pin" cx="680" cy="140" r="6"/><text class="pl" x="666" y="144" text-anchor="end">TXO / GPIO21</text>
+  <circle class="pin" cx="680" cy="170" r="6"/><text class="pl" x="666" y="174" text-anchor="end">3.3V</text>
+  <circle class="pin" cx="680" cy="200" r="6"/><text class="pl" x="666" y="204" text-anchor="end">GND</text>
+  <circle class="pin" cx="680" cy="230" r="6"/><text class="pl" x="666" y="234" text-anchor="end">5V</text>
+  <path class="w wg" d="M680 80 H708"/><text class="tag" x="712" y="84">GND</text>
+  <path class="w wg" d="M680 200 H708"/><text class="tag" x="712" y="204">GND</text>
+  <path class="w w33" d="M680 170 H708"/><text class="tag" x="712" y="174" style="fill:var(--w33)">3V3</text>
+  <path class="w w5" d="M390 370 V300 H720 V230 H680"/>
+  <!-- DS18B20 -->
+  <rect class="blk" x="940" y="40" width="200" height="120" rx="10"/>
+  <text class="blkT" x="1040" y="78" text-anchor="middle" font-size="15">DS18B20</text>
+  <text class="pl" x="1040" y="96" text-anchor="middle">wodoodporny, 3 m</text>
+  <circle class="pin" cx="940" cy="70"  r="6"/><text class="pl" x="955" y="122">czerwony = VCC</text>
+  <circle class="pin" cx="940" cy="110" r="6"/><text class="pl" x="955" y="138">żółty = DATA</text>
+  <circle class="pin" cx="940" cy="140" r="6"/><text class="pl" x="955" y="154">czarny = GND</text>
+  <path class="w w33" d="M940 70 H905"/><text class="tag" x="900" y="74" text-anchor="end" style="fill:var(--w33)">3V3</text>
+  <path class="w wg" d="M940 140 H905"/><text class="tag" x="900" y="144" text-anchor="end">GND</text>
+  <path class="w wo" d="M680 110 H940"/>
+  <circle cx="830" cy="110" r="5" fill="var(--ow)"/>
+  <path class="w wo" d="M830 110 V92"/>
+  <rect x="822" y="52" width="16" height="40" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+  <path class="w w33" d="M830 52 V36"/><text class="tag" x="830" y="30" text-anchor="middle" style="fill:var(--w33)">3V3</text>
+  <text class="tag" x="814" y="62" text-anchor="end">R1 4,7 kΩ</text><text class="note" x="814" y="78" text-anchor="end">SMD „4701”</text>
+  <!-- TXO -> R2 -> RX -->
+  <path class="w wu" d="M680 140 H750 V380"/>
+  <rect x="742" y="380" width="16" height="44" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+  <text class="tag" x="734" y="396" text-anchor="end">R2 1 kΩ</text><text class="note" x="734" y="412" text-anchor="end">SMD „1001”</text>
+  <path class="w wu" d="M750 424 V490 H790"/>
+  <!-- TMC2209 V985 - piny dokladnie jak na module (widok od gory) -->
+  <rect class="blk" x="790" y="370" width="170" height="270" rx="8"/>
+  <circle cx="875" cy="392" r="9" fill="#ddd" stroke="#000"/><path d="M869 392 H881 M875 386 V398" stroke="#000" stroke-width="2"/>
+  <text class="blkT" x="875" y="520" text-anchor="middle" font-size="16" transform="rotate(-90 875 515)">TMC2209</text>
+  <g>
+    <circle class="pin" cx="790" cy="400" r="6"/><text class="pl" x="802" y="404">EN</text>
+    <circle class="pin" cx="790" cy="430" r="6"/><text class="pl" x="802" y="434">MS1</text>
+    <circle class="pin" cx="790" cy="460" r="6"/><text class="pl" x="802" y="464">MS2</text>
+    <circle class="pin" cx="790" cy="490" r="6"/><text class="pl" x="802" y="494" style="font-weight:700">PDN</text>
+    <circle class="pin" cx="790" cy="520" r="6"/><text class="pl" x="802" y="524">USART (wolny)</text>
+    <circle class="pin" cx="790" cy="550" r="6"/><text class="pl" x="802" y="554">CLK (wolny)</text>
+    <circle class="pin" cx="790" cy="580" r="6"/><text class="pl" x="802" y="584">STEP</text>
+    <circle class="pin" cx="790" cy="610" r="6"/><text class="pl" x="802" y="614">DIR</text>
+    <circle class="pin" cx="960" cy="400" r="6"/><text class="pl" x="948" y="404" text-anchor="end">VM</text>
+    <circle class="pin" cx="960" cy="430" r="6"/><text class="pl" x="948" y="434" text-anchor="end">GND</text>
+    <circle class="pin" cx="960" cy="460" r="6"/><text class="pl" x="948" y="464" text-anchor="end">M1B</text>
+    <circle class="pin" cx="960" cy="490" r="6"/><text class="pl" x="948" y="494" text-anchor="end">M1A</text>
+    <circle class="pin" cx="960" cy="520" r="6"/><text class="pl" x="948" y="524" text-anchor="end">M2A</text>
+    <circle class="pin" cx="960" cy="550" r="6"/><text class="pl" x="948" y="554" text-anchor="end">M2B</text>
+    <circle class="pin" cx="960" cy="580" r="6"/><text class="pl" x="948" y="584" text-anchor="end">VIO</text>
+    <circle class="pin" cx="960" cy="610" r="6"/><text class="pl" x="948" y="614" text-anchor="end">GND</text>
+  </g>
+  <!-- lewe piny do GND (dwie grupy, RX pomiedzy) -->
+  <path class="w wg" d="M790 400 H772 M790 430 H772 M790 460 H772 M772 396 V464"/>
+  <path d="M762 464 H782 M766 470 H778 M770 476 H774" stroke="var(--gnd)" stroke-width="2.5"/>
+  <path class="w wg" d="M790 580 H772 M790 610 H772 M772 576 V614"/>
+  <path d="M762 614 H782 M766 620 H778 M770 626 H774" stroke="var(--gnd)" stroke-width="2.5"/>
+  <text class="note" x="692" y="640" text-anchor="end">EN, MS1, MS2, STEP, DIR → GND</text><text class="note" x="692" y="655" text-anchor="end" style="font-weight:700">PDN (4. pin) NIE do GND!</text>
+  <!-- prawe: GND, VIO -->
+  <path class="w wg" d="M960 430 H982"/><text class="tag" x="986" y="434">GND</text>
+  <path class="w w33" d="M960 580 H988"/><text class="tag" x="992" y="584" style="fill:var(--w33)">3V3</text>
+  <path class="w wg" d="M960 610 H985 V620"/><path d="M975 620 H995 M979 626 H991 M983 632 H987" stroke="var(--gnd)" stroke-width="2.5"/>
+  <!-- SILNIK -->
+  <rect class="blk" x="1040" y="430" width="100" height="150" rx="10"/>
+  <text x="1090" y="598" text-anchor="middle" class="tag">JK42HS48</text>
+  <circle cx="1095" cy="505" r="30" fill="#55555c" stroke="#000"/><circle cx="1095" cy="505" r="7" fill="#ccc"/>
+  <path class="w" style="stroke:#1a9a4a" d="M960 460 H1040"/><text class="note" x="1012" y="455" text-anchor="middle">zielony</text>
+  <path class="w" style="stroke:#111" d="M960 490 H1040"/><text class="note" x="1012" y="485" text-anchor="middle">czarny</text>
+  <path class="w" style="stroke:#d62828" d="M960 520 H1040"/><text class="note" x="1012" y="515" text-anchor="middle">czerwony</text>
+  <path class="w" style="stroke:#1f6fd1" d="M960 550 H1040"/><text class="note" x="1012" y="545" text-anchor="middle">niebieski</text>
+  <!-- XL6009 -->
+  <rect class="blk" x="420" y="470" width="220" height="110" rx="10"/>
+  <text class="blkT" x="530" y="515" text-anchor="middle" font-size="15">XL6009 step-up</text>
+  <text class="pl" x="530" y="535" text-anchor="middle">ustaw 12 V przed podłączeniem!</text>
+  
+  <circle class="pin" cx="420" cy="500" r="6"/><text class="pl" x="432" y="504">IN+</text>
+  <circle class="pin" cx="420" cy="555" r="6"/><text class="pl" x="432" y="559">IN–</text>
+  <circle class="pin" cx="640" cy="500" r="6"/><text class="pl" x="628" y="504" text-anchor="end">OUT+</text>
+  <circle class="pin" cx="640" cy="555" r="6"/><text class="pl" x="628" y="559" text-anchor="end">OUT–</text>
+  <path class="w w5" d="M390 370 V500 H420"/>
+  <path class="w wg" d="M420 555 H396 V572"/><path d="M384 572 H408 M388 578 H404 M392 584 H400" stroke="var(--gnd)" stroke-width="2.5"/>
+  <path class="w wg" d="M640 555 H664 V572"/><path d="M652 572 H676 M656 578 H672 M660 584 H668" stroke="var(--gnd)" stroke-width="2.5"/>
+  <!-- 12V: XL6009 OUT+ -> +VMOT (dookola, bez krzyzowania), C1 przy linii -->
+  <path class="w w12" d="M640 500 H700 V750 H1150 V375 H990 V400 H960"/>
+  <text class="tag" x="708" y="620" style="fill:var(--w12)">+12V</text>
+  <text class="tag" x="1060" y="368" style="fill:var(--w12)">+12V → VM</text>
+  <circle cx="900" cy="750" r="5" fill="var(--w12)"/>
+  <path class="w w12" d="M900 750 V764"/>
+  <path d="M886 764 H914 M886 774 H914" stroke="var(--ink)" stroke-width="3"/>
+  <path class="w wg" d="M900 774 V784"/><path d="M888 784 H912 M892 790 H908 M896 796 H904" stroke="var(--gnd)" stroke-width="2.5"/>
+  <text class="tag" x="876" y="772" text-anchor="end">C1 1000 µF 25 V</text><text class="note" x="876" y="788" text-anchor="end">pasek „–” do GND, przylutuj przy VM/GND modułu</text>
+</svg>
+<div class="legend">
+  <span><i style="background:var(--w5v)"></i>+5 V</span>
+  <span><i style="background:var(--w12)"></i>+12 V (silnik)</span>
+  <span><i style="background:var(--w33)"></i>3,3 V z płytki ESP</span>
+  <span><i style="background:var(--gnd)"></i>GND – wszystkie masy razem</span>
+  <span><i style="background:var(--uart)"></i>UART do TMC2209</span>
+  <span><i style="background:var(--ow)"></i>1-Wire DS18B20</span>
+</div>
+<p class="cap">Symbol ⏚ / napis GND = wspólna masa, napis 3V3 = pin „3.3V” płytki ESP. Te połączenia są oznaczone etykietami zamiast rysowania wszystkich przewodów, żeby linie się nie krzyżowały.</p>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="glosnik">3. Głośnik przez wzmacniacz LM386 (na przycisku BOOT)</h2>
+<div class="card">
+<svg class="big" viewBox="0 0 960 470" role="img" aria-label="Głośnik przez LM386">
+  <rect x="20" y="30" width="250" height="400" rx="12" fill="#1f5fb0" stroke="#0b2f60" stroke-width="2"/>
+  <text x="145" y="60" text-anchor="middle" style="fill:#fff;font-weight:700">płytka ESP32-C3</text>
+  <text x="145" y="78" text-anchor="middle" style="fill:#cfe0ff;font-size:12px">widok od tyłu</text>
+  <g style="font-size:13px">
+    <rect x="228" y="110" width="22" height="22" fill="#e8c34a" stroke="#000"/><text x="218" y="126" text-anchor="end" style="fill:#fff">GND</text>
+    <rect x="228" y="140" width="22" height="22" fill="#e8c34a" stroke="#000"/><text x="218" y="156" text-anchor="end" style="fill:#fff">RXO</text>
+    <rect x="228" y="170" width="22" height="22" fill="#e8c34a" stroke="#000"/><text x="218" y="186" text-anchor="end" style="fill:#fff">TXO</text>
+    <rect x="228" y="200" width="22" height="22" fill="#e8c34a" stroke="#000"/><text x="218" y="216" text-anchor="end" style="fill:#fff">3.3V</text>
+    <rect x="228" y="230" width="22" height="22" fill="#ffd43b" stroke="#000" stroke-width="3"/><text x="218" y="246" text-anchor="end" style="fill:#fff;font-weight:700">GND ⏚</text>
+    <rect x="228" y="260" width="22" height="22" fill="#ffd43b" stroke="#000" stroke-width="3"/><text x="218" y="276" text-anchor="end" style="fill:#fff;font-weight:700">5V</text>
+  </g>
+  <rect x="170" y="310" width="70" height="56" rx="6" fill="#bbb" stroke="#333"/>
+  <circle cx="205" cy="338" r="16" fill="#555"/>
+  <text x="205" y="306" text-anchor="middle" style="fill:#fff;font-size:13px;font-weight:700">BOOT</text>
+  <rect x="238" y="352" width="12" height="10" fill="#ffd43b" stroke="#000" stroke-width="2"/>
+  <text x="145" y="398" text-anchor="middle" style="fill:#fff;font-size:12px">nóżka z 3,3 V = GPIO9</text>
+  <text x="145" y="414" text-anchor="middle" style="fill:#cfe0ff;font-size:11px">(patrz rozdz. 4 – jak znaleźć)</text>
+  <path class="w wg" d="M250 241 H268 V254"/>
+  <path d="M258 254 H278 M262 260 H274 M266 266 H270" stroke="var(--gnd)" stroke-width="2.5"/>
+  <!-- LM386 -->
+  <text x="500" y="345" text-anchor="middle" class="lbl">U1 LM386</text>
+  <rect x="440" y="160" width="120" height="160" rx="6" fill="#222" stroke="#000"/>
+  <path d="M488 160 a12 12 0 0 0 24 0" fill="#555"/>
+  <g style="font-size:12px">
+    <rect x="428" y="174" width="12" height="12" fill="#ccc"/><text x="452" y="185" style="fill:#fff">1</text>
+    <rect x="428" y="214" width="12" height="12" fill="#ccc"/><text x="452" y="225" style="fill:#fff">2 −IN</text>
+    <rect x="428" y="254" width="12" height="12" fill="#ccc"/><text x="452" y="265" style="fill:#fff">3 +IN</text>
+    <rect x="428" y="294" width="12" height="12" fill="#ccc"/><text x="452" y="305" style="fill:#fff">4 GND</text>
+    <rect x="560" y="174" width="12" height="12" fill="#ccc"/><text x="548" y="185" text-anchor="end" style="fill:#fff">8</text>
+    <rect x="560" y="214" width="12" height="12" fill="#ccc"/><text x="548" y="225" text-anchor="end" style="fill:#fff">BYP 7</text>
+    <rect x="560" y="254" width="12" height="12" fill="#ccc"/><text x="548" y="265" text-anchor="end" style="fill:#fff">VCC 6</text>
+    <rect x="560" y="294" width="12" height="12" fill="#ccc"/><text x="548" y="305" text-anchor="end" style="fill:#fff">OUT 5</text>
+  </g>
+  <!-- GPIO9 -> C2 -> R5 -> pin3, R6 do GND -->
+  <path class="w wu" d="M250 357 H326"/>
+  <path d="M328 341 V373 M338 341 V373" stroke="var(--ink)" stroke-width="3"/>
+  <text x="322" y="338" class="note" text-anchor="end">+</text>
+  <text x="333" y="393" text-anchor="middle" class="lbl">C2 2,2 µF</text>
+  <text x="333" y="408" text-anchor="middle" class="note">„2.2 50V”</text>
+  <path class="w wu" d="M340 357 H352"/>
+  <rect x="352" y="349" width="40" height="16" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+  <text x="372" y="340" text-anchor="middle" class="lbl">R5 10 kΩ</text>
+  <text x="372" y="324" text-anchor="middle" class="note">SMD „1002”</text>
+  <path class="w wu" d="M392 357 H400 V260 H428"/>
+  <circle cx="400" cy="357" r="4" fill="var(--uart)"/>
+  <path class="w wu" d="M400 357 V372"/>
+  <rect x="392" y="372" width="16" height="40" fill="var(--card)" stroke="var(--ink)" stroke-width="2"/>
+  <path class="w wg" d="M400 412 V422"/>
+  <path d="M390 422 H410 M394 428 H406 M398 434 H402" stroke="var(--gnd)" stroke-width="2.5"/>
+  <text x="416" y="388" class="lbl">R6 470 Ω</text>
+  <text x="416" y="404" class="note">SMD „4700”</text>
+  <!-- C gain 1-8 -->
+  <path class="w wa" d="M428 180 H418 V138 H496"/>
+  <path d="M498 126 V150 M506 126 V150" stroke="var(--ink)" stroke-width="3"/>
+  <path class="w wa" d="M508 138 H582 V180 H572"/>
+  <text x="488" y="132" text-anchor="end" class="note">+</text>
+  <text x="530" y="160" class="note">C6 10 µF (1↔8)</text>
+  <text x="274" y="378" class="lbl" style="fill:var(--uart)">GPIO9</text>
+  <!-- pin2 / pin4 GND -->
+  <path class="w wg" d="M428 220 H412 V232"/>
+  <path d="M402 232 H422 M406 238 H418 M410 244 H414" stroke="var(--gnd)" stroke-width="2.5"/>
+  <path class="w wg" d="M428 300 H418 V312"/>
+  <path d="M408 312 H428 M412 318 H424 M416 324 H420" stroke="var(--gnd)" stroke-width="2.5"/>
+  <!-- 5V -> pin6 + C3 -->
+  <path class="w w5" d="M250 271 H290 V120 H650 V260 H572"/>
+  <text x="440" y="112" class="lbl" style="fill:var(--w5v)">5V</text>
+  <circle cx="650" cy="200" r="4" fill="var(--w5v)"/>
+  <path class="w w5" d="M650 200 H668"/>
+  <path d="M670 188 V212 M680 188 V212" stroke="var(--ink)" stroke-width="3"/>
+  <text x="664" y="184" class="note" text-anchor="end">+</text>
+  <path class="w wg" d="M682 200 H692 V212"/>
+  <path d="M682 212 H702 M686 218 H698 M690 224 H694" stroke="var(--gnd)" stroke-width="2.5"/>
+  <text x="708" y="196" class="lbl">C3 47 µF</text><text x="708" y="212" class="note">„47 25V”</text>
+  <!-- pin7 C5 -->
+  <path class="w wa" d="M572 220 H588"/>
+  <path d="M590 208 V232 M598 208 V232" stroke="var(--ink)" stroke-width="3"/>
+  <path class="w wg" d="M600 220 H612 V232"/>
+  <path d="M602 232 H622 M606 238 H618 M610 244 H614" stroke="var(--gnd)" stroke-width="2.5"/>
+  <text x="584" y="202" class="note">C5 10 µF</text><text x="586" y="214" class="note" text-anchor="end">+</text>
+  <!-- OUT -> R7 100 Ohm -> glosnik (zamiast dawnego C4) -->
+  <path class="w wa" d="M572 300 H676"/>
+  <rect x="676" y="292" width="44" height="16" fill="var(--card)" stroke="var(--accent)" stroke-width="2.5"/>
+  <text x="698" y="336" text-anchor="middle" class="lbl" style="fill:var(--accent)">R7 100 Ω</text>
+  <text x="698" y="351" text-anchor="middle" class="note">zamiast C4 · „1000” / „101”</text>
+  <path class="w w5" d="M720 300 H790"/>
+  <text x="728" y="322" class="lbl" style="fill:var(--w5v)">czerwony</text>
+  <circle cx="860" cy="270" r="60" fill="#333" stroke="#000" stroke-width="2"/>
+  <circle cx="860" cy="270" r="38" fill="#555"/><circle cx="860" cy="270" r="13" fill="#777"/>
+  <text x="860" y="196" text-anchor="middle" class="lbl">SP1 głośnik 14 Ω</text>
+  <path class="w" style="stroke:var(--ink)" d="M860 330 V380"/>
+  <text x="870" y="360" class="lbl">czarny</text>
+  <path d="M848 380 H872 M852 386 H868 M856 392 H864" stroke="var(--gnd)" stroke-width="2.5"/>
+  <text x="480" y="440" class="note">⏚ = GND płytki (wszystkie symbole masy to ten sam przewód)</text>
+</svg>
+</div>
+<div class="grid">
+<div>
+<h3>Krok po kroku</h3>
+<ol>
+<li>Włóż <b>podstawkę 8-pin</b> w płytkę uniwersalną i przylutuj. LM386 włożysz na końcu.</li>
+<li><b>Nóżka 6 (VCC)</b> → pin <b>5V</b> płytki ESP. Kondensator <b>C3 47 µF</b>: plus do nóżki 6, minus do GND, jak najbliżej układu.</li>
+<li><b>Nóżki 2 i 4</b> → <b>GND</b>.</li>
+<li><b>GPIO9</b> (nóżka BOOT z 3,3 V) → <b>C2 2,2 µF</b> (plus od strony GPIO9) → <b>R5 10 kΩ</b> („1002”) → <b>nóżka 3</b>.</li><li><b>R6 470 Ω</b> („4700”) między <b>nóżką 3 a GND</b>. R5 i R6 to dzielnik: zmniejsza sygnał z 3,3 V do ok. 0,15 V, który LM386 przyjmuje bez przesterowania.</li><li><b>C6 10 µF</b> między <b>nóżką 1 (+) a nóżką 8 (−)</b>. Zwiększa wzmocnienie z 20× do 200×.</li>
+<li><b>Nóżka 5 (OUT)</b> → <b>R7 100 Ω</b> → <b>czerwony</b> kabelek głośnika. <b>Czarny</b> → GND. R7 nie ma biegunowości. <i>(R7 zastępuje dawny kondensator C4 100 µF.)</i></li>
+<li><b>C5 10 µF</b> plusem do nóżki 7, minusem do GND. Przy dużym wzmocnieniu zalecany, bo zmniejsza szumy.</li>
+<li>Włóż LM386 w podstawkę, <b>wcięciem w tę stronę, gdzie jest nóżka 1</b>.</li>
+</ol>
+</div>
+<div>
+<h3>Jak to działa</h3>
+<ul>
+<li>Program na chwilę podaje na GPIO9 sygnał dźwiękowy o częstotliwości ok. 1,5–4 kHz. LM386 go wzmacnia i podaje na głośnik.</li>
+<li><b>C2</b> przepuszcza do wzmacniacza tylko dźwięk, a odcina napięcie stałe. Dzięki temu płytka ESP startuje normalnie, bo GPIO9 musi być w stanie wysokim przy włączaniu.</li>
+<li><b>R7 100 Ω</b> ogranicza prąd głośnika. Przez cewkę płynie stały prąd ok. <b>20 mA</b> (ok. 7 mW) – to bezpieczne dla głośnika 14 Ω i wzmacniacza. Wersja z kondensatorem 100 µF w tym miejscu dawała u Ciebie za cichy dźwięk, więc obowiązuje R7.</li>
+<li>Przycisk BOOT nadal działa jako <b>START / PAUZA / DALEJ</b>, a jego naciśnięcie daje ciche kliknięcie.</li>
+<li><b>RESET</b> (opis 复位) to tylko sprzętowy restart procesora.</li>
+</ul>
+</div>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="widoki">4. Jak rozpoznać elementy</h2>
+<div class="grid3">
+<div class="card">
+<svg viewBox="0 0 300 200" role="img" aria-label="Rezystory SMD">
+  <rect x="40" y="40" width="100" height="44" rx="3" fill="#111"/>
+  <rect x="30" y="40" width="14" height="44" fill="#c8c8c8"/><rect x="136" y="40" width="14" height="44" fill="#c8c8c8"/>
+  <text x="90" y="70" text-anchor="middle" style="fill:#fff;font-size:20px;font-family:monospace">4701</text>
+  <text x="160" y="58" class="lbl">= 4,7 kΩ</text><text x="160" y="76" class="note">→ R1 (DS18B20)</text>
+  <rect x="40" y="120" width="100" height="44" rx="3" fill="#111"/>
+  <rect x="30" y="120" width="14" height="44" fill="#c8c8c8"/><rect x="136" y="120" width="14" height="44" fill="#c8c8c8"/>
+  <text x="90" y="150" text-anchor="middle" style="fill:#fff;font-size:20px;font-family:monospace">1001</text>
+  <text x="160" y="138" class="lbl">= 1 kΩ</text><text x="160" y="156" class="note">→ R2 (silnik)</text>
+</svg>
+<p class="cap"><b>Rezystor SMD:</b> pierwsze 3 cyfry to wartość, a czwarta to liczba zer. 470 + 1 zero = 4700 Ω = 4,7 kΩ; 100 + 1 zero = 1000 Ω = 1 kΩ. Polaryzacja nie ma znaczenia.</p>
+</div>
+<div class="card">
+<svg viewBox="0 0 300 200" role="img" aria-label="Kondensator SMD elektrolityczny">
+  <text x="80" y="22" text-anchor="middle" class="tag">z góry</text>
+  <circle cx="80" cy="95" r="58" fill="#c9c9c9" stroke="#777" stroke-width="2"/>
+  <path d="M80 37 A58 58 0 0 0 80 153 Z" fill="#111"/>
+  <text x="52" y="100" text-anchor="middle" style="fill:#fff;font-size:30px;font-weight:700">−</text>
+  <text x="108" y="90" text-anchor="middle" style="font-size:13px;fill:#000;font-weight:700">47</text>
+  <text x="108" y="106" text-anchor="middle" style="font-size:11px;fill:#000">25V</text>
+  <text x="220" y="22" text-anchor="middle" class="tag">podstawka</text>
+  <path d="M175 50 h70 l20 20 v50 l-20 20 h-70 z" fill="#333"/>
+  <text x="185" y="100" style="fill:#fff;font-size:20px">−</text>
+  <text x="236" y="100" style="fill:#fff;font-size:20px">+</text>
+  <text x="220" y="165" text-anchor="middle" class="note">ścięte rogi = PLUS</text>
+</svg>
+<p class="cap"><b>Puszka SMD</b> (z płytki AK-750S): <b>czarne pole na górze = MINUS (−)</b>. Na podstawce ścięte rogi są od strony plusa.</p>
+</div>
+<div class="card">
+<svg viewBox="0 0 300 200" role="img" aria-label="Kondensator przewlekany">
+  <rect x="100" y="20" width="90" height="120" rx="12" fill="#222"/>
+  <rect x="100" y="20" width="22" height="120" fill="#bbb"/>
+  <text x="111" y="70" text-anchor="middle" style="font-size:20px;font-weight:700;fill:#000">−</text>
+  <text x="111" y="100" text-anchor="middle" style="font-size:20px;font-weight:700;fill:#000">−</text>
+  <text x="155" y="75" text-anchor="middle" style="fill:#fff;font-size:12px">1000µF</text>
+  <text x="155" y="92" text-anchor="middle" style="fill:#fff;font-size:12px">25V</text>
+  <line x1="125" y1="140" x2="125" y2="175" stroke="#999" stroke-width="4"/>
+  <line x1="165" y1="140" x2="165" y2="192" stroke="#999" stroke-width="4"/>
+  <text x="112" y="178" text-anchor="end" class="lbl">− krótsza</text>
+  <text x="178" y="190" class="lbl">+ dłuższa</text>
+</svg>
+<p class="cap"><b>Kondensator przewlekany</b> (C1 1000 µF): <b>jasny pasek z „−” = MINUS</b>. Po wylutowaniu obie nóżki są równe, więc kieruj się paskiem.</p>
+</div>
+</div>
+
+<div class="grid" style="margin-top:16px">
+<div class="card">
+<svg viewBox="-95 0 450 230" role="img" aria-label="LM386 widok z góry">
+  <rect x="100" y="30" width="100" height="170" rx="6" fill="#222"/>
+  <path d="M138 30 a12 12 0 0 0 24 0" fill="#666"/>
+  <circle cx="118" cy="52" r="5" fill="#666"/>
+  <text x="150" y="125" text-anchor="middle" style="fill:#fff;font-weight:700" transform="rotate(-90 150 120)">LM386</text>
+  <g style="font-size:15px;font-weight:600">
+    <rect x="84" y="50" width="16" height="10" fill="#ccc"/><text x="78" y="59" text-anchor="end">1 C6 + (10 µF)</text>
+    <rect x="84" y="90" width="16" height="10" fill="#ccc"/><text x="78" y="99" text-anchor="end">2 → GND</text>
+    <rect x="84" y="130" width="16" height="10" fill="#ccc"/><text x="78" y="139" text-anchor="end">3 ← R5 ← C2 ← GPIO9</text>
+    <rect x="84" y="170" width="16" height="10" fill="#ccc"/><text x="78" y="179" text-anchor="end">4 → GND</text>
+    <rect x="200" y="50" width="16" height="10" fill="#ccc"/><text x="222" y="59">8 C6 −</text>
+    <rect x="200" y="90" width="16" height="10" fill="#ccc"/><text x="222" y="99">7 C5 (opc.)</text>
+    <rect x="200" y="130" width="16" height="10" fill="#ccc"/><text x="222" y="139">6 ← 5V</text>
+    <rect x="200" y="170" width="16" height="10" fill="#ccc"/><text x="222" y="179">5 → R7 → głośn.</text>
+  </g>
+  <text x="150" y="222" text-anchor="middle" class="note">widok z góry, wcięcie u góry</text>
+</svg>
+<p class="cap"><b>LM386:</b> wcięcie lub kropka wskazuje nóżkę 1. Numeracja idzie w dół lewą stroną (1–4) i wraca w górę prawą (5–8).</p>
+</div>
+<div class="card">
+<svg viewBox="0 0 300 230" role="img" aria-label="Przycisk BOOT – nóżki">
+  <rect x="90" y="60" width="120" height="110" rx="8" fill="#bbb" stroke="#333"/>
+  <circle cx="150" cy="115" r="30" fill="#555"/>
+  <text x="150" y="50" text-anchor="middle" class="lbl">BOOT</text>
+  <rect x="68" y="72" width="22" height="16" fill="#ccc" stroke="#333"/>
+  <rect x="210" y="72" width="22" height="16" fill="#ccc" stroke="#333"/>
+  <rect x="68" y="142" width="22" height="16" fill="#ccc" stroke="#333"/>
+  <rect x="210" y="142" width="22" height="16" fill="#ffd43b" stroke="#000" stroke-width="2"/>
+  <text x="240" y="155" class="tag">3,3 V</text>
+  <text x="62" y="155" text-anchor="end" class="tag">0 V</text>
+  <text x="150" y="200" text-anchor="middle" class="note">przykład – u Ciebie może być inna nóżka,</text>
+  <text x="150" y="216" text-anchor="middle" class="note">zawsze sprawdź miernikiem</text>
+</svg>
+<p class="cap"><b>Nóżka GPIO9:</b> przy płytce na USB zmierz napięcie DC między nóżkami BOOT a GND. Nóżka z <b>~3,3 V</b> to GPIO9, ta z <b>0 V</b> to masa. Przed lutowaniem odłącz USB.</p>
+</div>
+<div class="card">
+<svg viewBox="-75 0 430 230" role="img" aria-label="TMC2209 piny">
+  <rect x="90" y="20" width="120" height="190" rx="6" fill="#1b4d1b" stroke="#000"/>
+  <rect x="115" y="70" width="70" height="70" fill="#888"/>
+  <text x="150" y="110" text-anchor="middle" style="fill:#fff;font-size:11px">radiator</text>
+  <g style="font-size:14px;font-weight:600">
+    <text x="80" y="38" text-anchor="end">EN → GND</text>
+    <text x="80" y="60" text-anchor="end">MS1 → GND</text>
+    <text x="80" y="82" text-anchor="end">MS2 → GND</text>
+    <text x="80" y="104" text-anchor="end" style="font-weight:700;fill:var(--uart)">PDN ← R2 ← GPIO21</text>
+    <text x="80" y="126" text-anchor="end">USART – wolny</text>
+    <text x="80" y="148" text-anchor="end">CLK – wolny</text>
+    <text x="80" y="170" text-anchor="end">STEP → GND</text>
+    <text x="80" y="192" text-anchor="end">DIR → GND</text>
+    <text x="220" y="38" style="fill:var(--w12);font-weight:700">VM ← 12V</text>
+    <text x="220" y="60">GND</text>
+    <text x="220" y="82">M1B zielony</text>
+    <text x="220" y="104">M1A czarny</text>
+    <text x="220" y="126">M2A czerwony</text>
+    <text x="220" y="148">M2B niebieski</text>
+    <text x="220" y="170" style="fill:var(--w33);font-weight:700">VIO ← 3.3V</text>
+    <text x="220" y="192">GND</text>
+  </g>
+  <g fill="#e8c34a" stroke="#000"><circle cx="98" cy="34" r="4"/><circle cx="98" cy="56" r="4"/><circle cx="98" cy="78" r="4"/><circle cx="98" cy="100" r="4"/><circle cx="98" cy="122" r="4"/><circle cx="98" cy="144" r="4"/><circle cx="98" cy="166" r="4"/><circle cx="98" cy="188" r="4"/>
+  <circle cx="202" cy="34" r="4"/><circle cx="202" cy="56" r="4"/><circle cx="202" cy="78" r="4"/><circle cx="202" cy="100" r="4"/><circle cx="202" cy="122" r="4"/><circle cx="202" cy="144" r="4"/><circle cx="202" cy="166" r="4"/><circle cx="202" cy="188" r="4"/></g>
+</svg>
+<p class="cap"><b>TMC2209 V985</b> (Twój moduł, sprawdzony: odpowiada pod adresem 0). Rozkład pinów według producenta (Tenstar). R2 idzie do <b>PDN</b> (4. pin), a <b>USART</b> (5. pin) zostaje wolny. Bez 3,3 V na <b>VIO</b> sterownik nie odpowiada i ściąga linię PDN w dół.</p>
+</div>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="tabele">5. Tabele połączeń</h2>
+<h3>Płytka ESP32-C3 (złącze 6-pin + BOOT)</h3>
+<table>
+<tr><th>Pin płytki</th><th>Połącz z</th><th>Uwagi</th></tr>
+<tr><td><b>5V</b></td><td>+5V za włącznikiem SW1 · LM386 nóżka 6</td><td>zasila ESP, ekran i wzmacniacz</td></tr>
+<tr><td><b>GND</b> (oba)</td><td>wspólna masa</td><td></td></tr>
+<tr><td><b>3.3V</b></td><td>DS18B20 czerwony · R1 4,7 kΩ · TMC2209 <b>VIO</b></td><td>logika 3,3 V</td></tr>
+<tr><td><b>TXO / GPIO21</b></td><td>R2 1 kΩ (SMD 1001) → TMC2209 <b>PDN</b></td><td>jedyny przewód sterujący silnikiem</td></tr>
+<tr><td><b>RXO / GPIO20</b></td><td>DS18B20 żółty + R1 4,7 kΩ (SMD 4701) do 3.3V</td><td>1-Wire</td></tr>
+<tr><td><b>BOOT (GPIO9)</b></td><td>C2 2,2 µF (+ od strony GPIO9) → R5 10 kΩ → LM386 nóżka 3 (oraz R6 470 Ω z nóżki 3 do GND)</td><td>lutowanie do nóżki przycisku z 3,3 V</td></tr>
+</table>
+<h3>TMC2209</h3>
+<table>
+<tr><th>Pin TMC2209</th><th>Połącz z</th><th>Uwagi</th></tr>
+<tr><td>VM</td><td>+12 V z XL6009 OUT+ i C1 1000 µF (+)</td><td>C1 jak najbliżej sterownika</td></tr>
+<tr><td>GND (przy VM)</td><td>GND, C1 (–)</td><td>gruby przewód</td></tr>
+<tr><td>VIO</td><td>3.3V z płytki ESP</td><td>bez tego UART nie działa</td></tr>
+<tr><td>GND (przy VIO)</td><td>GND</td><td></td></tr>
+<tr><td><b>PDN</b> (NIE „USART”/„RX” – na V985 ten pad jest fabrycznie niepodłączony!)</td><td>R2 1 kΩ → GPIO21 (TXO)</td><td>przewód sterujący</td></tr>
+<tr><td>EN, MS1, MS2, STEP, DIR</td><td>GND</td><td>MS1/MS2 = adres 0</td></tr><tr><td>USART</td><td><b>niepodłączony</b></td><td>na V985 pad nie jest połączony z układem</td></tr>
+<tr><td>CLK</td><td>niepodłączony</td><td></td></tr>
+<tr><td>M1A, M1B</td><td>silnik: <b>czarny → M1A, zielony → M1B</b> (cewka 1, ~3,3 Ω)</td><td></td></tr>
+<tr><td>M2A, M2B</td><td>silnik: <b>czerwony → M2A, niebieski → M2B</b> (cewka 2, ~3,3 Ω)</td><td></td></tr>
+</table>
+<div class="grid">
+<div>
+<h3>Moduł ładowania USB-C</h3>
+<table>
+<tr><th>Pad</th><th>Połącz z</th></tr>
+<tr><td>B+ / B– (przy „K”)</td><td>akumulator + / –</td></tr>
+<tr><td>5V + / 5V –</td><td>5V+ → SW1 → +5V, 5V– → GND</td></tr>
+<tr><td>K</td><td>opcja: przycisk do GND</td></tr>
+</table>
+<p class="cap">Przed podłączeniem akumulatora podłącz USB-C i naciśnij K. Na padach 5V powinno być ~5,1 V, a na padach baterii ~4,2 V.</p>
+</div>
+<div>
+<h3>XL6009 i silnik</h3>
+<table>
+<tr><th>Element</th><th>Połączenie</th></tr>
+<tr><td>XL6009 IN+ / IN–</td><td>+5V (za SW1) / GND</td></tr>
+<tr><td>XL6009 OUT+ / OUT–</td><td>TMC2209 VM / GND</td></tr>
+<tr><td>Cewka A</td><td>czarny + zielony (~3,3 Ω)</td></tr>
+<tr><td>Cewka B</td><td>czerwony + niebieski (~3,3 Ω)</td></tr>
+</table>
+<p class="cap">Złe obroty: zamień 2 przewody jednej cewki albo ustaw <code>MOTOR_INVERT true</code>.</p>
+</div>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="montaz">6. Kolejność montażu</h2>
+<ol>
+<li><b>Wylutuj części z płytki AK-750S</b> i zmierz rezystory miernikiem.</li>
+<li><b>Płytka ESP przez USB komputera</b>: wgraj program (rozdz. 8). Przy pierwszym starcie dotknij logo i skalibruj ekran.</li>
+<li><b>Głośnik + LM386</b> (rozdz. 3): przy włączeniu słychać melodię, a dotknięcie ekranu daje „klik”.</li>
+<li><b>DS18B20 + R1</b> → Menu → Termometr pokazuje temperaturę.</li>
+<li><b>Moduł ładowania + akumulator</b>: sprawdź polaryzację i 5 V na wyjściu.</li>
+<li><b>XL6009 osobno</b>: zasil 5 V i bez obciążenia ustaw potencjometrem <b>12,0 V</b>.</li>
+<li><b>TMC2209 bez silnika</b>: VIO (3,3 V), GND, VM (12 V), C1, <b>PDN</b> przez R2 do GPIO21, a EN, MS1, MS2, STEP i DIR do GND. USART i CLK zostają wolne. Sprawdź, czy nic się nie grzeje.</li>
+<li><b>Silnik</b>: podłączaj i odłączaj <u>tylko przy wyłączonym zasilaniu</u>. Potem Ustawienia → Test silnika.</li>
+<li>Na końcu włącznik SW1, uszczelnienia (rozdz. 7) i montaż w obudowie.</li>
+</ol>
+<div class="warn"><b>Zasilanie:</b> moduł daje maks. 4 A z 5 V. Silnik przy 700 mA (stealthChop) pobiera ok. 0,6–1 A z 5 V, ESP z ekranem ok. 0,1 A, a LM386 przy piknięciu ok. 0,1 A, więc zapas jest duży. Na układ TMC2209 przyklej radiator.</div>
+
+<!-- ================================================================ -->
+<h2 id="mechanika">7. Uszczelnienia i mechanika</h2>
+<div class="grid">
+<div class="card">
+<svg viewBox="0 0 520 300" role="img" aria-label="Przekrój przejścia wałka przez front">
+  <!-- silnik -->
+  <rect x="10" y="70" width="120" height="160" rx="8" fill="#55555c" stroke="#000"/>
+  <text x="70" y="155" text-anchor="middle" style="fill:#fff;font-weight:700">silnik</text>
+  <rect x="130" y="128" width="10" height="44" fill="#888"/>
+  <text x="12" y="252" class="note">kołnierz Ø22 centruje gniazdo</text>
+  <!-- obudowa / front PETG -->
+  <path d="M140 60 H360 V100 H300 V134 H290 V100 H160 V134 H140 Z" fill="#e9d9b8" stroke="#8a7550"/>
+  <path d="M140 240 H360 V200 H300 V166 H290 V200 H160 V166 H140 Z" fill="#e9d9b8" stroke="#8a7550"/>
+  <!-- walek + tulejka -->
+  <rect x="140" y="143" width="330" height="14" fill="#bbb" stroke="#555"/>
+  <rect x="250" y="134" width="150" height="32" fill="#9fb7c9" stroke="#2c5a7a" stroke-width="2"/>
+  <text x="325" y="28" text-anchor="middle" class="tag">tulejka 8×1,5 na epoksydzie (na wałku 5 mm z D)</text>
+  <path d="M325 34 V132" stroke="var(--mut)" stroke-width="1" stroke-dasharray="3 3"/>
+  <!-- simmering -->
+  <rect x="300" y="100" width="34" height="34" fill="#222"/><rect x="300" y="166" width="34" height="34" fill="#222"/>
+  <circle cx="324" cy="126" r="5" fill="none" stroke="#e8c34a" stroke-width="2"/><circle cx="324" cy="174" r="5" fill="none" stroke="#e8c34a" stroke-width="2"/>
+  <text x="317" y="52" text-anchor="middle" class="tag">simmering 8×16×5 TC</text>
+  <!-- komora odplywowa -->
+  <text x="222" y="90" text-anchor="middle" class="note">komora odpływowa 2–3 mm</text>
+  <path d="M225 200 V262" stroke="var(--uart)" stroke-width="3" stroke-dasharray="5 4"/>
+  <text x="232" y="282" class="note">otwór Ø3 na dole → na zewnątrz</text>
+  <!-- chemia -->
+  <rect x="360" y="40" width="150" height="220" fill="rgba(80,150,220,.18)"/>
+  <text x="440" y="74" text-anchor="middle" class="lbl">chemia</text>
+  <text x="440" y="92" text-anchor="middle" class="note">(lejek / mieszadło)</text>
+  <text x="440" y="226" text-anchor="middle" class="note">sprężynka simmeringu</text>
+  <text x="440" y="242" text-anchor="middle" class="note">→ od strony chemii</text>
+</svg>
+<p class="cap"><b>Przejście wałka:</b> wałek ma ścięcie D na całej długości, więc simmering pracuje na wklejonej <b>tulejce nierdzewnej 8×1,5</b> (epoksyd wypełnia ścięcie). Gniazdo Ø16 drukuj na <b>Ø15,8–15,9 mm</b>, głębokość 5 mm, fazka 0,5 mm na wejściu. Za simmeringiem komora z otworem odpływowym: jeśli coś przecieknie, nie trafi do łożyska silnika.</p>
+</div>
+<div>
+<h3>Simmering – zasady</h3>
+<ul>
+<li><b>Sprężynka wargi w stronę chemii.</b> Odwrotnie zamontowany przecieka.</li>
+<li>Wargę i tulejkę posmaruj <b>smarem silikonowym</b>. Po procesie przepłucz okolicę wodą: zaschnięty blix ściera wargę.</li>
+<li>Gniazdo wycentruj na <b>kołnierzu Ø22 mm silnika</b> (pierścień Ø22,1–22,2 mm). Dodatkowe łożysko nie jest wtedy konieczne; opcjonalnie <b>688-2RS</b> w to samo gniazdo Ø16.</li>
+<li>Silnik <b>nie jest szczelny</b> (łożysko ZZ, łączenia obudowy). Uszczelnij łączenia cienko silikonem, a wyjście przewodu koszulką z klejem.</li>
+<li>Opór simmeringu to ok. 0,02–0,05 Nm. Po montażu sprawdź <b>Ustawienia → Test silnika</b>.</li>
+</ul>
+<h3>O-ring koreksu</h3>
+<table>
+<tr><th>Wymiar</th><th>Wartość</th></tr>
+<tr><td>rowek (pomiar z Fusion)</td><td>Ø130 – Ø137,7 mm, szer. ok. 3,85 mm</td></tr>
+<tr><td>O-ring</td><td><b>131×3 NBR70</b> (ew. 131×3,5)</td></tr>
+<tr><td>głębokość rowka</td><td><b>2,2–2,4 mm</b>, płaskie dno</td></tr>
+<tr><td>ciągłość</td><td><b>pełne 360°</b>: wycięcie zlewu przenieś do środka okręgu albo poprowadź rowek nad nim</td></tr>
+</table>
+<p class="cap"><i>Alternatywa bez uszczelniania wałka:</i> sprzęgło magnetyczne – 2 tarcze Ø30 mm, po 4 magnesy 10×5 mm (N-S-N-S) na Ø20 mm, ścianka 2 mm, odstęp magnesów ≤ 4 mm. Magnesy po mokrej stronie muszą być całkowicie zatopione w PETG.</p>
+</div>
+</div>
+
+<!-- ================================================================ -->
+<h2 id="wgrywanie">8. Wgrywanie programu (v2.1)</h2>
+<p>Folder <code>firmware</code>:</p>
+<table>
+<tr><th>Plik</th><th>Do czego</th><th>Ustawienia, kalibracja, programy</th></tr>
+<tr><td><code>SpoolFilmProcessor_v2.1_update.bin</code></td><td>aktualizacja (USB lub WiFi)</td><td><b>zostają</b></td></tr>
+<tr><td><code>SpoolFilmProcessor_v2.1_full.bin</code></td><td>nowa lub wyczyszczona płytka, adres 0x0</td><td><b>są kasowane</b></td></tr>
+<tr><td><code>flash_update.bat</code>, <code>flash_full.bat</code></td><td>wgrywanie jednym kliknięciem (Windows)</td><td>—</td></tr>
+<tr><td><code>esptool.exe</code></td><td>program wgrywający Espressif, używany przez pliki .bat</td><td>—</td></tr>
+</table>
+<div class="grid3">
+<div class="card">
+<h3>A. Przez WiFi (bez kabla)</h3>
+<ol>
+<li>Na urządzeniu: <b>Ustawienia → Aktualizacja WiFi</b>.</li>
+<li>Telefonem lub laptopem połącz się z siecią <b>FilmProcessor</b>, hasło <b>film1234</b>.</li>
+<li>Otwórz <b>http://192.168.4.1</b>.</li>
+<li>Wybierz <code>SpoolFilmProcessor_v2.1_update.bin</code> i wyślij.</li>
+<li>Urządzenie samo się zrestartuje.</li>
+</ol>
+</div>
+<div class="card">
+<h3>B. Przez USB – aktualizacja</h3>
+<ol>
+<li>Podłącz płytkę kablem USB-C.</li>
+<li>Uruchom <code>flash_update.bat</code>.</li>
+<li>Podaj port (Enter = COM3; numer sprawdzisz w Menedżerze urządzeń → Porty).</li>
+<li>Poczekaj na „DONE”.</li>
+</ol>
+<p class="cap">Gdy port się nie łączy: przytrzymaj <b>BOOT</b>, naciśnij <b>RESET</b>, puść BOOT i uruchom ponownie.</p>
+</div>
+<div class="card">
+<h3>C. Nowa płytka – pełne wgranie</h3>
+<ol>
+<li>Uruchom <code>flash_full.bat</code> i potwierdź <b>Y</b>.</li>
+<li><i>Albo</i> w Chrome lub Edge otwórz <b>espressif.github.io/esptool-js</b>, Connect, adres <b>0x0</b>, plik <code>SpoolFilmProcessor_v2.1_full.bin</code>, Program.</li>
+<li>Po starcie <b>dotknij logo</b> i skalibruj ekran (3 krzyżyki → GOTOWE).</li>
+</ol>
+</div>
+</div>
+<p class="cap">Wgraną wersję widać w prawym dolnym rogu ekranu z logo („v2.1”) oraz w <b>Ustawienia → Informacje</b> (z datą kompilacji). Kod źródłowy jest w folderze <code>SpoolFilmProcessor</code> (Arduino IDE, pakiet esp32 3.x, patrz INSTRUKCJA.md).</p>
+
+<!-- ================================================================ -->
+<h2 id="obsluga">9. Obsługa – skrót</h2>
+<div class="grid">
+<div>
+<h3>Start procesu</h3>
+<ol>
+<li>Po włączeniu urządzenie od razu otwiera <b>ostatnio użyty program</b> (wstecz → lista → rodzaje procesu).</li>
+<li>Ekran <b>START</b>: ustawienie procesora (pionowo / poziomo), <b>czy czujnik dotyka chemii</b>, ilość chemii, temperatura kąpieli wstępnej → <b>DALEJ</b>.</li>
+<li>Na pierwszym ekranie „WLEJ” u góry widać <b>rolkę x/y</b> zużycia chemii, a na dole szacowany czas całego procesu.</li>
+<li><b>START</b> na ekranie albo przycisk <b>BOOT</b> (START / PAUZA / DALEJ).</li>
+</ol>
+<h3>Czujnik nie w chemii</h3>
+<ul>
+<li>Temperatura pokoju jest zapisywana raz, przy DALEJ.</li>
+<li>W kąpieli wstępnej i płukaniu czujnik działa jak <b>termometr wody z kranu</b>: ostatni szczyt, max, „ustalona”. Kolory: niebieski &lt; 38 °C, zielony 38–45 °C, czerwony &gt; 45 °C.</li>
+<li>Pikanie: <b>za gorąca</b> – szybkie i wysokie, <b>za zimna</b> – wolne i niskie.</li>
+<li>Temperaturę chemii liczy model cieplny koreksu (Paterson Multi Reel 3) i odpowiednio wydłuża czas.</li>
+</ul>
+</div>
+<div>
+<h3>Przydatne</h3>
+<ul>
+<li><b>Kalibracja dotyku:</b> dotknij ekranu w trakcie logo. Zapis następuje dopiero po <b>GOTOWE</b> albo BOOT; bez potwierdzenia przez 20 s kalibracja zaczyna się od nowa.</li>
+<li><b>Obrót ekranu 180°:</b> Ustawienia → Obrót ekranu.</li>
+<li><b>Zużycie chemii:</b> po procesie na ekranie GOTOWE ustaw liczbę rolek → ZAPISZ. Czas wywoływacza i blixu rośnie wg tabeli producenta.</li>
+<li><b>Płukanie zmianami wody:</b> w edycji kroku, pole „Zmiany wody”.</li>
+<li>Kąpiel wstępna wodą <b>40–43 °C</b> jest bezpieczna dla emulsji i nagrzewa koreks. Unikaj wody powyżej 45 °C i dużych skoków temperatury między kąpielami.</li>
+</ul>
+</div>
+</div>
+</main>
+</body>
+</html>

@@ -1,0 +1,5 @@
+firmware/esptool.exe
+*.tmp
+build/
+.vscode/
+_oryginaly_zdjec/
