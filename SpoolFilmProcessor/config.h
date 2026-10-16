@@ -1,10 +1,10 @@
-﻿// =====================================================================
+// =====================================================================
 //  config.h  -  WSZYSTKIE piny i stale sprzetowe w jednym miejscu
 //  Plytka: msalamon EVB-00055 "ESP32-C3 z wyswietlaczem TFT 2.4 ST7789"
 // =====================================================================
 #pragma once
 
-#define FW_VERSION "2.1"
+#define FW_VERSION "2.2"
 // data kompilacji (np. "Oct 10 2026 14:05") - widoczna na intro i w INFORMACJE
 #define FW_BUILD   __DATE__ " " __TIME__
 #define TOUCH_MIN_GAP_MS  250   // minimalny odstep miedzy kolejnymi kliknieciami

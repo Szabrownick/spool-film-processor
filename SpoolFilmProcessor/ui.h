@@ -1120,67 +1120,112 @@ void runCaptureRoom() {
 //  Czujnik jako TERMOMETR WODY (gdy nie siega chemii): w kroku z woda
 //  (kapiel wstepna, plukanie) woda z kranu raz dotyka sondy, raz nie.
 //  Odchylenie od temperatury pokoju > 2 C = kontakt z woda.
-//  Szukamy wierzcholkow (wzrost, potem spadek o 0,4 C) - "ostatnia
-//  wzwyzka" to temperatura ostatniej porcji wody (sonda ma bezwladnosc,
-//  przy krotkim kontakcie pokaze troche mniej niz woda ma naprawde).
-//  Pelny koreks: odczyt stoi w miejscu (+-0,2 C przez 8 s) = woda ma tyle.
+//  Sonda ma bezwladnosc: przy krotkim chlapnieciu pokaze mniej niz woda ma
+//  naprawde; przy pelnym koreksie odczyt jest temperatura wody.
 // ---------------------------------------------------------------------
+// Stany (koreks pod kranem, zwykle pelny; wode mozna wylewac i nalewac ponownie):
+//  - PELNY:   sonda w wodzie -> temperatura wody = biezacy odczyt. Powolne zmiany
+//             (stygniecie, regulacja kranu) nie oznaczaja wylania.
+//  - WYLANA:  szybki spadek, co najmniej DRAIN_DROP C w ciagu DRAIN_WIN ms, gdy sonda
+//             byla w wodzie. Koreks pusty od POCZATKU spadku (ostatnie maksimum
+//             w oknie) - model liczy stygniecie od tej chwili, nie od DALEJ.
+//  - NALANA:  po wylaniu wzrost o REFILL_RISE C od najnizszego odczytu = caly koreks
+//             znow pelny wody o temperaturze z biezacego odczytu.
+//  - CHLODNIEJSZA WODA (kran przestawiony z 46 na 43 C tez daje szybki spadek):
+//             po "wylaniu" odczyt przestaje spadac (< FLAT_DELTA w ~2 s), a sonda
+//             ma wciaz > room + 5 C -> to woda, nie powietrze: koreks pelny,
+//             stygniecie policzone od "wylania" jest cofane. Mokra sonda w powietrzu
+//             dalej spada w strone temperatury pokoju.
+//  - WOLNA SONDA (w powietrzu stygnie powoli i nie daje 1 C / 2 s):
+//             a) odczyt wrocil w okolice pokoju (brak kontaktu) -> pusty od poczatku
+//                biezacego spadku (decStart),
+//             b) DALEJ, gdy odczyt juz opadal -> pusty od decStart (runNextStep).
+// Odczyty DS18B20 (12 bit) przychodza co ok. 0,8 s, wiec okno 2 s to 2-3 probki.
+// Progi sprawdzone symulacja (sonda w wodzie tau ~3 s, w powietrzu 8-90 s).
+#define DRAIN_DROP  1.0f
+#define DRAIN_WIN   2000
+#define REFILL_RISE 0.2f
+#define FLAT_DELTA  0.25f
+struct WaterSample { uint32_t t; float T, wall; };
 struct WaterTrack {
-  float hi = -99, lo = 199;   // biezacy wzrost: max i min od ostatniego wierzcholka
-  float last = NAN;           // ostatni wierzcholek (temperatura ostatniej porcji wody)
+  WaterSample hist[8];        // ostatnie probki (czas, odczyt, temperatura koreksu z modelu)
+  uint8_t nHist = 0;
+  float lo = 199;             // najnizszy odczyt od wylania
+  float last = NAN;           // temperatura wody tuz przed ostatnim wylaniem
   float maxT = NAN;           // najwyzsza temperatura w tym kroku
   float stableRef = NAN;
   uint32_t stableSince = 0;
-  uint32_t lastContact = 0;   // kiedy sonda ostatnio czula wode
-  bool falling = false;       // po wierzcholku temperatura spada = woda wylana
-  bool justDrained = false;   // do modelu: przelicz koreks od chwili wierzcholka
-  uint32_t hiAt = 0;          // chwila wierzcholka (ostatni moment z woda)
-  float wallAtHi = NAN;       // temperatura koreksu w tej chwili
+  uint32_t drainAt = 0;       // poczatek wylewania
+  float wallAtDrain = NAN;    // temperatura koreksu w tej chwili
+  uint32_t detAt = 0;         // kiedy wykryto wylanie
+  float decT = -99;           // poczatek biezacego spadku: odczyt, czas, koreks
+  uint32_t decAt = 0;
+  float decWall = NAN;
+  bool everFull = false;      // byla juz woda w tym kroku
+  bool falling = false;       // koreks pusty (wylany)
+  bool justDrained = false;   // do modelu: przelicz koreks od chwili wylania
+  bool undoDrain = false;     // do modelu: to nie bylo wylanie - przywroc koreks
   bool contact = false, stable = false;
 } wt;
 void waterReset() { wt = WaterTrack(); }
+static void waterDrain(float Tlast, uint32_t at, float wall, uint32_t now, float T) {
+  wt.falling = true; wt.justDrained = true;
+  wt.last = Tlast; wt.drainAt = at; wt.wallAtDrain = wall;
+  wt.detAt = now; wt.lo = T;
+}
 void waterUpdate() {
   if (!thermo.valid) return;
   float T = thermo.t, Ta = roomTemp();
   uint32_t now = millis();
+  // nowa probka tylko gdy zmienil sie odczyt albo minelo 0,5 s
+  if (!wt.nHist || wt.hist[wt.nHist - 1].T != T || now - wt.hist[wt.nHist - 1].t > 500) {
+    if (wt.nHist == 8) { memmove(wt.hist, wt.hist + 1, sizeof(WaterSample) * 7); wt.nHist = 7; }
+    wt.hist[wt.nHist++] = {now, T, run.Twall};
+  }
   wt.contact = fabsf(T - Ta) > 2.0f;
-  if (wt.contact) wt.lastContact = now;
   if (wt.contact) wt.maxT = isnan(wt.maxT) ? T : max(wt.maxT, T);
-  if (wt.falling) {                                   // po wylaniu: sledz dolek, czekaj na ponowny wzrost
-    if (T < wt.lo) wt.lo = T;
-    if (T > wt.lo + 0.4f) {                           // znow rosnie - dolana woda
-      wt.falling = false;
-      wt.hi = T; wt.hiAt = now; wt.wallAtHi = run.Twall;
-    }
+  if (!wt.falling) {
+    if (wt.contact) wt.everFull = true;
+    // poczatek biezacego spadku: ostatnia chwila, gdy odczyt nie byl ponizej poziomu
+    if (T >= wt.decT - 0.1f) { wt.decT = T; wt.decAt = now; wt.decWall = run.Twall; }
+    // szybki spadek w oknie DRAIN_WIN = wylewanie; poczatek = maksimum w oknie
+    int iMax = -1;
+    for (int i = 0; i < wt.nHist; i++)
+      if (now - wt.hist[i].t <= DRAIN_WIN && (iMax < 0 || wt.hist[i].T > wt.hist[iMax].T)) iMax = i;
+    if (wt.everFull && iMax >= 0 && wt.hist[iMax].T - T >= DRAIN_DROP && wt.hist[iMax].T > Ta + 2.0f)
+      waterDrain(wt.hist[iMax].T, wt.hist[iMax].t, wt.hist[iMax].wall, now, T);
+    else if (wt.everFull && !wt.contact)            // wolna sonda: wrocila do temperatury pokoju
+      waterDrain(wt.decT, wt.decAt, wt.decWall, now, T);
   } else {
-    if (T > wt.hi) { wt.hi = T; wt.hiAt = now; wt.wallAtHi = run.Twall; }
     if (T < wt.lo) wt.lo = T;
-    if (T < wt.hi - 0.4f && wt.hi - wt.lo > 1.0f && wt.hi > Ta + 2.0f) {   // wierzcholek minal = wylana woda
-      wt.last = wt.hi;
-      wt.falling = true; wt.justDrained = true;
-      wt.lo = T;
+    int iOld = -1;                                  // probka sprzed ok. 2 s
+    for (int i = 0; i < wt.nHist; i++)
+      if (now - wt.hist[i].t >= 2000 && now - wt.hist[i].t <= 2800) iOld = i;
+    if (T >= wt.lo + REFILL_RISE && wt.contact) {   // nalana - koreks znow pelny
+      wt.falling = false;
+      wt.decT = T; wt.decAt = now; wt.decWall = run.Twall;
+    } else if (iOld >= 0 && now - wt.detAt >= 2400 && T > Ta + 5.0f && fabsf(T - wt.hist[iOld].T) < FLAT_DELTA) {
+      wt.falling = false; wt.undoDrain = true;      // odczyt sie wyplaszczyl w cieple: chlodniejsza woda
+      wt.decT = T; wt.decAt = now; wt.decWall = wt.wallAtDrain;
     }
   }
   if (isnan(wt.stableRef) || fabsf(T - wt.stableRef) > 0.2f) { wt.stableRef = T; wt.stableSince = now; }
   wt.stable = wt.contact && !wt.falling && now - wt.stableSince > 8000;
 }
-// temperatura wody do pokazania i do modelu (NAN = jeszcze nie bylo wody)
-float waterTemp() {
-  if (wt.stable) return thermo.t;                           // koreks pelny, odczyt ustalony
-  if (wt.contact && !wt.falling && thermo.t >= wt.hi - 0.05f) return thermo.t;  // wlasnie rosnie - woda na sondzie
-  if (!isnan(wt.last)) return wt.last;
-  return wt.contact ? thermo.t : NAN;
-}
+// koreks pelny wody? (do modelu i ekranu)
+bool waterFull() { return wt.everFull && !wt.falling && wt.contact; }
+// temperatura wody do modelu: pelny = biezacy odczyt, inaczej NAN (koreks pusty)
+float waterTemp() { return waterFull() ? thermo.t : NAN; }
 bool waterStep(const Step &s) { return !ctrlIsCurve(s.ctrl); }
 
 // ostrzezenia dzwiekowe o temperaturze wody (tylko gdy woda dotyka sondy):
 //  za goraca: odczyt > WATER_MAX - pewne mimo bezwladnosci sondy (odczyt zawsze
 //             zaniza), pika od razu i co 4 s, dopoki trwa
-//  za zimna:  wierzcholek porcji wody < WATER_MIN albo ustalony odczyt < WATER_MIN
+//  za zimna:  woda tuz przed wylaniem < WATER_MIN albo ustalony odczyt < WATER_MIN
 //             (nie przy samym wzroście - sonda dopiero sie nagrzewa), co 6 s
 #define WATER_MIN 38.0f
 #define WATER_MAX 45.0f
-void waterAlarm(bool peakNow) {
+void waterAlarm(bool drainedNow) {
   static uint32_t lastHot = 0, lastCold = 0;
   uint32_t now = millis();
   if (!thermo.valid) return;
@@ -1188,7 +1233,7 @@ void waterAlarm(bool peakNow) {
     if (now - lastHot > 4000) { lastHot = now; BEEP(PAT_HOT); }
     return;
   }
-  bool cold = (peakNow && wt.last < WATER_MIN) || (wt.stable && thermo.t < WATER_MIN);
+  bool cold = (drainedNow && wt.last < WATER_MIN) || (wt.stable && thermo.t < WATER_MIN);
   if (cold && now - lastCold > 6000) { lastCold = now; BEEP(PAT_COLD); }
 }
 bool stepCools(const Step &s) { return runNoTherm && stepAllowsComp(s) && ctrlIsCurve(s.ctrl); }
@@ -1242,20 +1287,20 @@ void runModelPour(const Step &s) {
 void runModelTick(float dt) {
   const Step &cs = progs[run.prog].s[min(run.step, progs[run.prog].nSteps - 1)];
   if (runNoTherm && run.phase != R_DONE && waterStep(cs)) {   // woda: sonda = termometr wody
-    float lastBefore = wt.last;
     waterUpdate();
-    waterAlarm(wt.last != lastBefore && !isnan(wt.last));
+    waterAlarm(wt.justDrained);           // wylanie: ostrzez, jesli ostatnia woda byla za zimna
     float Ta = roomTemp();
     if (!run.modelOn) { run.modelOn = true; run.Twall = Ta; }
-    float w = waterTemp();
-    // pod kranem: koreks zwykle pelny, ale bywa wylewany i nalewany od nowa -
-    // ponad 20 s bez wody na sondzie = koreks pusty (stygnie)
-    bool full = !isnan(w) && millis() - wt.lastContact < 20000 && !wt.falling;
-    if (wt.justDrained) {                // spadek po wierzcholku: koreks pusty od chwili wierzcholka
+    if (wt.justDrained) {                 // wylewanie: koreks pusty od POCZATKU szybkiego spadku
       wt.justDrained = false;
-      if (!isnan(wt.wallAtHi)) run.Twall = coolEmptyStep(wt.wallAtHi, Ta, runHoriz, (millis() - wt.hiAt) / 1000.0f);
+      if (!isnan(wt.wallAtDrain)) run.Twall = coolEmptyStep(wt.wallAtDrain, Ta, runHoriz, (millis() - wt.drainAt) / 1000.0f);
     }
-    if (full) { run.Tmodel = w; coolStep(run.Tmodel, run.Twall, Ta, runVolMl, cs.agit, runHoriz, dt); }
+    if (wt.undoDrain) {                   // to byla chlodniejsza woda, nie wylanie: cofnij stygniecie
+      wt.undoDrain = false;
+      if (!isnan(wt.wallAtDrain)) run.Twall = wt.wallAtDrain;
+    }
+    float w = waterTemp();                // pelny koreks: temperatura wody = biezacy odczyt
+    if (!isnan(w)) { run.Tmodel = w; coolStep(run.Tmodel, run.Twall, Ta, runVolMl, cs.agit, runHoriz, dt); }
     else run.Twall = coolEmptyStep(run.Twall, Ta, runHoriz, dt);
     return;
   }
@@ -1328,6 +1373,12 @@ void runBeginStep() {
 
 void runNextStep() {
   agitator.stop();
+  // DALEJ w kroku z woda (czujnik w powietrzu), gdy wylania nie wykryto, ale odczyt
+  // juz opadal: woda zostala wylana na poczatku spadku - stygniecie liczymy od tamtej
+  // chwili, a nie od DALEJ (wolna sonda w powietrzu nie daje szybkiego spadku)
+  if (runNoTherm && run.modelOn && waterStep(progs[run.prog].s[run.step]) && wt.everFull && !wt.falling &&
+      thermo.valid && thermo.t < wt.decT - 0.5f && !isnan(wt.decWall))
+    run.Twall = coolEmptyStep(wt.decWall, roomTemp(), runHoriz, (millis() - wt.decAt) / 1000.0f);
   waterReset();
   run.step++;
   run.change = 0;
@@ -1603,25 +1654,34 @@ tempPanel:
     if (runNoTherm && waterStep(s)) {   // krok z woda: sonda jako termometr wody z kranu
       waterUpdate();
       drawThermometer(g, 16, 8, 30, C_WHITE);
+      // kolor wg zakresu do plukania: za zimna / dobra 38-45 / za goraca
+      auto rangeCol = [](float t) -> uint16_t { return t < WATER_MIN ? CAT_COL[CAT_E6] : (t <= WATER_MAX ? C_OK : C_RED2); };
+      bool full = waterFull();
+      // duza liczba: biezacy odczyt (przy pelnym koreksie = temperatura wody)
       if (thermo.valid) snprintf(b, sizeof(b), "%.1f", toUnit(thermo.t)); else snprintf(b, sizeof(b), "--.-");
       g->setFont(F_L);
       if (g->textWidth(b) > 76) g->setFont(F_M);
-      txtP(g, b, 66, 24, 1, C_WHITE);
+      txtP(g, b, 66, 24, 1, full ? rangeCol(thermo.t) : C_WHITE);
       g->setFont(F_SB);
-      txtP(g, wt.contact ? TR("woda", "water") : TR("czujnik", "probe"), 66, 50, 1, wt.contact ? C_ACC : C_SOFT);
-      float w = waterTemp();
-      if (isnan(w)) {
+      if (full) txtP(g, TR("woda", "water"), 66, 50, 1, rangeCol(thermo.t));
+      else if (wt.falling) txtP(g, TR("wylana", "drained"), 66, 50, 1, C_ACC);
+      else txtP(g, TR("czujnik", "probe"), 66, 50, 1, C_SOFT);
+      if (full) {                        // koreks pelny wody o tej temperaturze
+        g->setFont(F_SB);
+        txtP(g, wt.stable ? TR("ustalona", "steady") : TR("pelny koreks", "tank full"), 53, 76, 1, wt.stable ? C_OK : C_TXT);
+        g->setFont(F_S);
+        if (!isnan(wt.maxT)) { snprintf(b, sizeof(b), "max %.1f~", toUnit(wt.maxT)); txtP(g, b, 53, 97, 1, C_SOFT); }
+      } else if (wt.falling) {           // wylana: ostatnia woda + jak dlugo koreks stoi pusty
+        snprintf(b, sizeof(b), TR("byla %.1f~", "was %.1f~"), toUnit(wt.last));
+        g->setFont(F_SB);
+        txtP(g, b, 53, 76, 1, rangeCol(wt.last));
+        int e = (millis() - wt.drainAt) / 1000;
+        snprintf(b, sizeof(b), TR("pusty %d:%02d", "empty %d:%02d"), e / 60, e % 60);
+        g->setFont(F_S);
+        txtP(g, b, 53, 97, 1, C_SOFT);
+      } else {
         g->setFont(F_S);
         txtP(g, TR("czekam na wode", "waiting for water"), 53, 78, 1, C_SOFT);
-      } else {
-        // kolor wg zakresu do plukania: za zimna / ok / dobra 40-45 / za goraca
-        uint16_t wc = w < WATER_MIN ? CAT_COL[CAT_E6] : (w <= WATER_MAX ? C_OK : C_RED2);
-        snprintf(b, sizeof(b), TR("woda %.1f~", "water %.1f~"), toUnit(w));
-        g->setFont(F_SB);
-        txtP(g, b, 53, 76, 1, wc);
-        g->setFont(F_S);
-        if (wt.stable) txtP(g, TR("ustalona", "steady"), 53, 97, 1, C_OK);
-        else if (!isnan(wt.maxT)) { snprintf(b, sizeof(b), "max %.1f~", toUnit(wt.maxT)); txtP(g, b, 53, 97, 1, C_SOFT); }
       }
       g->setFont(&lgfx::fonts::Font0);
       snprintf(b, sizeof(b), TR("koreks %.1f~", "tank %.1f~"), toUnit(run.Twall));
@@ -2397,7 +2457,13 @@ void captureAll() {
     run.phase = R_POUR; captureOne("08b_czujnik_wyl_wlej");
     run.Tamb = 22.0f; run.phase = R_RUN; captureOne("08c_czujnik_wyl_odliczanie");
     { int ss = run.step; run.step = 0; run.phase = R_RUN; run.timer.start(300, CTRL_OFF, false); run.Twall = 39.4f;
-      waterReset(); wt.last = 43.2f; wt.maxT = 47.1f; captureOne("08f_woda_plukanie");
+      // realistyczne stany: pokoj 22 C zapisany na starcie, sonda w wodzie / po wylaniu
+      float sT = thermo.t; bool sV = thermo.valid, sR = run.roomSet; float sRoom = run.Troom;
+      thermo.valid = true; run.roomSet = true; run.Troom = 22.0f;
+      waterReset(); wt.everFull = true; wt.maxT = 47.1f; thermo.t = 43.2f; captureOne("08f_woda_plukanie");
+      waterReset(); wt.everFull = true; wt.maxT = 47.1f; wt.falling = true; wt.last = 43.2f;
+      wt.lo = 31.5f; wt.drainAt = millis() - 12000; thermo.t = 31.5f; run.Twall = 40.8f; captureOne("08g_woda_wylana");
+      thermo.t = sT; thermo.valid = sV; run.roomSet = sR; run.Troom = sRoom;
       waterReset(); run.step = ss; }
     { int ss = run.step; run.step = 0; run.phase = R_POUR; scr = S_SETUP; captureOne("08d_przygotowanie"); run.step = ss; } runHoriz = 1; captureOne("08e_przygotowanie_poziomo"); runHoriz = 0; scr = S_RUN;
     runNoTherm = sNT; runVolMl = sV; }
