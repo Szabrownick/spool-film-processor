@@ -69,14 +69,14 @@ ol li,ul li{margin:4px 0}
 <body>
 <main>
 <h1>Film Processor DIY – schemat i montaż</h1>
-<p class="sub">ESP32-C3 + TFT 2,4" (msalamon EVB-00055) · TMC2209 · JK42HS48-1204 · DS18B20 · XL6009 · moduł ładowania USB-C · Li-ion 5000 mAh · LM386 + głośnik · <b>program v2.2</b> · 15.10.2026</p>
+<p class="sub">ESP32-C3 + TFT 2,4" (msalamon EVB-00055) · TMC2209 · JK42HS48-1204 · DS18B20 · XL6009 · moduł ładowania USB-C · Li-ion 5000 mAh · LM386 + głośnik · <b>program v2.3</b> · 15.10.2026</p>
 <p class="toc"><a href="#czesci">1. BOM</a><a href="#glowny">2. Schemat główny</a><a href="#glosnik">3. Głośnik</a><a href="#widoki">4. Jak rozpoznać elementy</a><a href="#tabele">5. Tabele połączeń</a><a href="#montaz">6. Kolejność montażu</a><a href="#mechanika">7. Uszczelnienia</a><a href="#wgrywanie">8. Wgrywanie programu</a><a href="#obsluga">9. Obsługa</a></p>
 
 <div class="warn"><b>Zasada:</b> na złącze płytki wyprowadzone są tylko <b>GPIO21 (TXO)</b> i <b>GPIO20 (RXO)</b>. Silnik jest sterowany jednym przewodem (UART), a czujnik drugim (1-Wire). Przycisk <b>BOOT (GPIO9)</b> działa jako START i dodatkowo daje sygnał dla głośnika. Wszystko inne to zasilanie.</div>
 
 <!-- ================================================================ -->
 <h2 id="czesci">1. BOM – lista części</h2>
-<p class="cap">Stan na wersję programu <b>v2.2</b>. „AK-750S” = płytka-dawca, z której wylutowujesz drobne elementy. Rezystory i kondensatory można też kupić nowe (przewlekane): wartości są te same.</p>
+<p class="cap">Stan na wersję programu <b>v2.3</b>. „AK-750S” = płytka-dawca, z której wylutowujesz drobne elementy. Rezystory i kondensatory można też kupić nowe (przewlekane): wartości są te same.</p>
 
 <h3>A. Moduły</h3>
 <table>
@@ -636,12 +636,12 @@ ol li,ul li{margin:4px 0}
 </div>
 
 <!-- ================================================================ -->
-<h2 id="wgrywanie">8. Wgrywanie programu (v2.2)</h2>
+<h2 id="wgrywanie">8. Wgrywanie programu (v2.3)</h2>
 <p>Folder <code>firmware</code>:</p>
 <table>
 <tr><th>Plik</th><th>Do czego</th><th>Ustawienia, kalibracja, programy</th></tr>
-<tr><td><code>SpoolFilmProcessor_v2.2_update.bin</code></td><td>aktualizacja (USB lub WiFi)</td><td><b>zostają</b></td></tr>
-<tr><td><code>SpoolFilmProcessor_v2.2_full.bin</code></td><td>nowa lub wyczyszczona płytka, adres 0x0</td><td><b>są kasowane</b></td></tr>
+<tr><td><code>SpoolFilmProcessor_v2.3_update.bin</code></td><td>aktualizacja (USB lub WiFi)</td><td><b>zostają</b></td></tr>
+<tr><td><code>SpoolFilmProcessor_v2.3_full.bin</code></td><td>nowa lub wyczyszczona płytka, adres 0x0</td><td><b>są kasowane</b></td></tr>
 <tr><td><code>flash_update.bat</code>, <code>flash_full.bat</code></td><td>wgrywanie jednym kliknięciem (Windows)</td><td>—</td></tr>
 <tr><td><code>esptool.exe</code></td><td>program wgrywający Espressif, używany przez pliki .bat</td><td>—</td></tr>
 </table>
@@ -652,7 +652,7 @@ ol li,ul li{margin:4px 0}
 <li>Na urządzeniu: <b>Ustawienia → Aktualizacja WiFi</b>.</li>
 <li>Telefonem lub laptopem połącz się z siecią <b>FilmProcessor</b>, hasło <b>film1234</b>.</li>
 <li>Otwórz <b>http://192.168.4.1</b>.</li>
-<li>Wybierz <code>SpoolFilmProcessor_v2.2_update.bin</code> i wyślij.</li>
+<li>Wybierz <code>SpoolFilmProcessor_v2.3_update.bin</code> i wyślij.</li>
 <li>Urządzenie samo się zrestartuje.</li>
 </ol>
 </div>
@@ -670,12 +670,12 @@ ol li,ul li{margin:4px 0}
 <h3>C. Nowa płytka – pełne wgranie</h3>
 <ol>
 <li>Uruchom <code>flash_full.bat</code> i potwierdź <b>Y</b>.</li>
-<li><i>Albo</i> w Chrome lub Edge otwórz <b>espressif.github.io/esptool-js</b>, Connect, adres <b>0x0</b>, plik <code>SpoolFilmProcessor_v2.2_full.bin</code>, Program.</li>
+<li><i>Albo</i> w Chrome lub Edge otwórz <b>espressif.github.io/esptool-js</b>, Connect, adres <b>0x0</b>, plik <code>SpoolFilmProcessor_v2.3_full.bin</code>, Program.</li>
 <li>Po starcie <b>dotknij logo</b> i skalibruj ekran (3 krzyżyki → GOTOWE).</li>
 </ol>
 </div>
 </div>
-<p class="cap">Wgraną wersję widać w prawym dolnym rogu ekranu z logo („v2.2”) oraz w <b>Ustawienia → Informacje</b> (z datą kompilacji). Kod źródłowy jest w folderze <code>SpoolFilmProcessor</code> (Arduino IDE, pakiet esp32 3.x, patrz INSTRUKCJA.md).</p>
+<p class="cap">Wgraną wersję widać w prawym dolnym rogu ekranu z logo („v2.3”) oraz w <b>Ustawienia → Informacje</b> (z datą kompilacji). Kod źródłowy jest w folderze <code>SpoolFilmProcessor</code> (Arduino IDE, pakiet esp32 3.x, patrz INSTRUKCJA.md).</p>
 
 <!-- ================================================================ -->
 <h2 id="obsluga">9. Obsługa – skrót</h2>
@@ -691,7 +691,7 @@ ol li,ul li{margin:4px 0}
 <h3>Czujnik nie w chemii</h3>
 <ul>
 <li>Temperatura pokoju jest zapisywana raz, przy DALEJ.</li>
-<li>W kąpieli wstępnej i płukaniu czujnik działa jak <b>termometr wody z kranu</b>: spadek o ok. 1 °C w kilka sekund = wylewanie (stygnięcie koreksu od tej chwili), wzrost = nalanie, max, „ustalona”. Kolory: niebieski &lt; 38 °C, zielony 38–45 °C, czerwony &gt; 45 °C.</li>
+<li>W kąpieli wstępnej i płukaniu czujnik działa jak <b>termometr wody z kranu</b>: spadek o ok. 0,4 °C w ok. 12 s = wylewanie (stygnięcie koreksu od tej chwili), wzrost = nalanie, max, „ustalona”. Kolory: niebieski &lt; 38 °C, zielony 38–45 °C, czerwony &gt; 45 °C.</li>
 <li>Pikanie: <b>za gorąca</b> – szybkie i wysokie, <b>za zimna</b> – wolne i niskie.</li>
 <li>Temperaturę chemii liczy model cieplny koreksu (Paterson Multi Reel 3) i odpowiednio wydłuża czas.</li>
 </ul>

@@ -4,7 +4,7 @@
 
 Samodzielnie zbudowany procesor do wywoływania filmów (C-41, B&W, E-6, ECN-2, RA-4). Mieszaniem w koreksie steruje silnik krokowy. Całą obsługę zapewnia mały ekran dotykowy (2,4", ok. 49×38 mm). Program sam pilnuje czasu kroków i koryguje go według temperatury chemii i jej zużycia.
 
-**Wersja programu: v2.2**
+**Wersja programu: v2.3**
 
 <p align="center">
   <img src="docs/screens/00_intro.png" width="320" alt="Ekran startowy">
@@ -126,7 +126,7 @@ Zrzuty ekranu pochodzą prosto z urządzenia (ekran 320×240, na zrzutach powię
 </tr>
 <tr>
 <td width="50%" valign="top"><b>Pierwszy krok:</b> u góry „rolka 6/16” (kontrola zużycia chemii), na dole szacowany czas całego procesu.</td>
-<td width="50%" valign="top"><b>Kąpiel wstępna:</b> czujnik mierzy wodę z kranu w koreksie. Spadek o ok. 1 °C w ciągu kilku sekund oznacza wylewanie i od tej chwili liczy się stygnięcie koreksu, a wzrost – ponowne nalanie. Kolor zielony oznacza zakres 38–45 °C.</td>
+<td width="50%" valign="top"><b>Kąpiel wstępna:</b> czujnik mierzy wodę z kranu w koreksie. Spadek o ok. 0,4 °C w ciągu kilku sekund oznacza wylewanie i od tej chwili liczy się stygnięcie koreksu, a wzrost – ponowne nalanie. Kolor zielony oznacza zakres 38–45 °C.</td>
 </tr>
 <tr>
 <td width="50%" valign="top" align="center"><img src="docs/screens/08g_water_drained.png" width="100%"></td>
@@ -239,7 +239,7 @@ Jeśli chemia w trakcie kroku stygnie, krok wydłuża się dokładnie o tyle, il
 Przy małej ilości chemii (np. Paterson na stojąco z 3 rolkami) sonda nie sięga cieczy i mierzy powietrze. Wtedy:
 
 - **temperatura pokoju** jest zapisywana raz, na starcie;
-- w **kąpieli wstępnej i płukaniu** sonda działa jak **termometr wody z kranu**: spadek o ≥ 1 °C w ciągu ok. 8 s (wylewanie trwa 6–7 s) oznacza wylewanie i stygnięcie koreksu liczy się od początku spadku; wzrost o 0,2 °C oznacza nalanie wody o bieżącej temperaturze; chłodniejszą wodę z kranu rozpoznaje po tym, że odczyt się wypłaszcza zamiast spadać w stronę temperatury pokoju; pokazuje maksimum i „ustalona”, gdy koreks jest pełny, i **pika**, gdy woda jest za gorąca (> 45 °C) albo za zimna (< 38 °C);
+- w **kąpieli wstępnej i płukaniu** sonda działa jak **termometr wody z kranu**: spadek o ≥ 0,4 °C w ciągu ok. 12 s oznacza wylewanie (sonda w powietrzu stygnie wolno, ok. 0,05 °C/s) i stygnięcie koreksu liczy się od początku spadku; wzrost o 0,2 °C oznacza nalanie wody o bieżącej temperaturze; chłodniejszą wodę z kranu rozpoznaje po tym, że odczyt się wypłaszcza zamiast spadać w stronę temperatury pokoju; pokazuje maksimum i „ustalona”, gdy koreks jest pełny, i **pika**, gdy woda jest za gorąca (> 45 °C) albo za zimna (< 38 °C);
 - **temperaturę chemii liczy model cieplny koreksu**: ciecz ↔ ścianki i spirale ↔ pokój. Uwzględnia konwekcję naturalną (korelacje Churchilla–Chu dla ściany pionowej i walca poziomego), promieniowanie, przewodzenie przez ściankę z polistyrenu oraz wodę pozostałą w koreksie. Model działa w czasie rzeczywistym, także gdy pusty koreks czeka na chemię;
 - przykład (500 ml, pionowo, pokój 21 °C, ADOX 3:15): koreks po kąpieli wodą 45 °C → chemia 38,0 → 37,7 °C, korekta 0…+3 s. Zimny koreks → +33 s.
 
@@ -269,7 +269,7 @@ Płytka ma wyprowadzone tylko dwa wolne piny: GPIO21 steruje silnikiem (UART), a
 
 ### Schematy budowy
 
-Z [dokumentacji PDF](docs/pl/SpoolFilmProcessor_dokumentacja_v2.2.pdf) (podpisy na rysunkach po angielsku).
+Z [dokumentacji PDF](docs/pl/SpoolFilmProcessor_dokumentacja_v2.3.pdf) (podpisy na rysunkach po angielsku).
 
 **Połączenia główne** – ESP32-C3, TMC2209, DS18B20, XL6009, moduł ładowania, akumulator:
 
@@ -306,7 +306,7 @@ Z [dokumentacji PDF](docs/pl/SpoolFilmProcessor_dokumentacja_v2.2.pdf) (podpisy 
 </tr>
 </table>
 
-Pełna lista części (BOM), schematy, tabele połączeń, montaż i uszczelnienia: **[SpoolFilmProcessor_dokumentacja_v2.2.pdf](docs/pl/SpoolFilmProcessor_dokumentacja_v2.2.pdf)** (źródło: [docs/pl/schemat.html](docs/pl/schemat.html)).
+Pełna lista części (BOM), schematy, tabele połączeń, montaż i uszczelnienia: **[SpoolFilmProcessor_dokumentacja_v2.3.pdf](docs/pl/SpoolFilmProcessor_dokumentacja_v2.3.pdf)** (źródło: [docs/pl/schemat.html](docs/pl/schemat.html)).
 
 ---
 
@@ -314,10 +314,10 @@ Pełna lista części (BOM), schematy, tabele połączeń, montaż i uszczelnien
 
 | Sposób | Plik | Ustawienia na płytce |
 |---|---|---|
-| Arduino IDE | folder [SpoolFilmProcessor](SpoolFilmProcessor) albo [SpoolFilmProcessor_v2.2_ArduinoIDE.zip](firmware/SpoolFilmProcessor_v2.2_ArduinoIDE.zip) | zostają |
-| WiFi (Ustawienia → Aktualizacja WiFi, sieć `FilmProcessor`, http://192.168.4.1) | [firmware/SpoolFilmProcessor_v2.2_update.bin](firmware/SpoolFilmProcessor_v2.2_update.bin) | zostają |
+| Arduino IDE | folder [SpoolFilmProcessor](SpoolFilmProcessor) albo [SpoolFilmProcessor_v2.3_ArduinoIDE.zip](firmware/SpoolFilmProcessor_v2.3_ArduinoIDE.zip) | zostają |
+| WiFi (Ustawienia → Aktualizacja WiFi, sieć `FilmProcessor`, http://192.168.4.1) | [firmware/SpoolFilmProcessor_v2.3_update.bin](firmware/SpoolFilmProcessor_v2.3_update.bin) | zostają |
 | USB, aktualizacja | `firmware/flash_update.bat` | zostają |
-| USB, nowa płytka (adres 0x0) | `firmware/flash_full.bat` / [SpoolFilmProcessor_v2.2_full.bin](firmware/SpoolFilmProcessor_v2.2_full.bin) | kasowane |
+| USB, nowa płytka (adres 0x0) | `firmware/flash_full.bat` / [SpoolFilmProcessor_v2.3_full.bin](firmware/SpoolFilmProcessor_v2.3_full.bin) | kasowane |
 
 Pliki `.bat` potrzebują `esptool.exe` w folderze `firmware`. Pobierz `esptool-windows-amd64.zip` z [espressif/esptool releases](https://github.com/espressif/esptool/releases). Nową płytkę można też wgrać bez `.bat`: [esptool-js](https://espressif.github.io/esptool-js/) w Chrome lub Edge, adres `0x0`.
 

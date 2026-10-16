@@ -69,14 +69,14 @@ ol li,ul li{margin:4px 0}
 <body>
 <main>
 <h1>Spool Film Processor – schematics and assembly</h1>
-<p class="sub">ESP32-C3 + 2.4" TFT (msalamon EVB-00055) · TMC2209 · JK42HS48-1204 · DS18B20 · XL6009 · USB-C charger module · Li-ion 5000 mAh · LM386 + speaker · <b>firmware v2.2</b> · 2026-10-16</p>
+<p class="sub">ESP32-C3 + 2.4" TFT (msalamon EVB-00055) · TMC2209 · JK42HS48-1204 · DS18B20 · XL6009 · USB-C charger module · Li-ion 5000 mAh · LM386 + speaker · <b>firmware v2.3</b> · 2026-10-16</p>
 <p class="toc"><a href="#bom">1. BOM</a><a href="#main">2. Main schematic</a><a href="#speaker">3. Speaker</a><a href="#identify">4. Identifying parts</a><a href="#tables">5. Wiring tables</a><a href="#assembly">6. Assembly order</a><a href="#seals">7. Seals</a><a href="#flashing">8. Flashing</a><a href="#usage">9. Usage</a></p>
 
 <div class="warn"><b>Rule:</b> the board's header exposes only <b>GPIO21 (TXO)</b> and <b>GPIO20 (RXO)</b>. The motor is driven over one wire (UART) and the probe over the other (1-Wire). The <b>BOOT (GPIO9)</b> button works as START and also feeds the speaker. Everything else is power.</div>
 
 <!-- ================================================================ -->
 <h2 id="bom">1. BOM – bill of materials</h2>
-<p class="cap">Valid for firmware <b>v2.2</b>. “Donor board” = an old board (here AK-750S) the small SMD parts were desoldered from. All resistors and capacitors can also be bought new (through-hole); the values are the same.</p>
+<p class="cap">Valid for firmware <b>v2.3</b>. “Donor board” = an old board (here AK-750S) the small SMD parts were desoldered from. All resistors and capacitors can also be bought new (through-hole); the values are the same.</p>
 
 <h3>A. Modules</h3>
 <table>
@@ -614,14 +614,14 @@ ol li,ul li{margin:4px 0}
 </div>
 
 <!-- ================================================================ -->
-<h2 id="flashing">8. Flashing the firmware (v2.2)</h2>
+<h2 id="flashing">8. Flashing the firmware (v2.3)</h2>
 <p><code>firmware</code> folder:</p>
 <table>
 <tr><th>File</th><th>Purpose</th><th>Settings, calibration, programs</th></tr>
-<tr><td><code>SpoolFilmProcessor_v2.2_update.bin</code></td><td>update (USB or WiFi), address 0x10000</td><td><b>kept</b></td></tr>
-<tr><td><code>SpoolFilmProcessor_v2.2_full.bin</code></td><td>new or erased board, address 0x0</td><td><b>erased</b></td></tr>
+<tr><td><code>SpoolFilmProcessor_v2.3_update.bin</code></td><td>update (USB or WiFi), address 0x10000</td><td><b>kept</b></td></tr>
+<tr><td><code>SpoolFilmProcessor_v2.3_full.bin</code></td><td>new or erased board, address 0x0</td><td><b>erased</b></td></tr>
 <tr><td><code>flash_update.bat</code>, <code>flash_full.bat</code></td><td>one-click flashing (Windows)</td><td>—</td></tr>
-<tr><td><code>SpoolFilmProcessor_v2.2_ArduinoIDE.zip</code></td><td>source code for Arduino IDE + instructions</td><td><b>kept</b></td></tr>
+<tr><td><code>SpoolFilmProcessor_v2.3_ArduinoIDE.zip</code></td><td>source code for Arduino IDE + instructions</td><td><b>kept</b></td></tr>
 <tr><td><code>esptool.exe</code></td><td>Espressif flashing tool used by the .bat files – download <code>esptool-windows-amd64.zip</code> from github.com/espressif/esptool/releases</td><td>—</td></tr>
 </table>
 <div class="grid3">
@@ -631,7 +631,7 @@ ol li,ul li{margin:4px 0}
 <li>On the device: <b>Settings → WiFi update</b>.</li>
 <li>Connect a phone or laptop to the <b>FilmProcessor</b> network, password <b>film1234</b>.</li>
 <li>Open <b>http://192.168.4.1</b>.</li>
-<li>Choose <code>SpoolFilmProcessor_v2.2_update.bin</code> and send it.</li>
+<li>Choose <code>SpoolFilmProcessor_v2.3_update.bin</code> and send it.</li>
 <li>The device restarts by itself.</li>
 </ol>
 </div>
@@ -649,12 +649,12 @@ ol li,ul li{margin:4px 0}
 <h3>C. New board – full flash</h3>
 <ol>
 <li>Run <code>flash_full.bat</code> and confirm with <b>Y</b>.</li>
-<li><i>Or</i> in Chrome or Edge open <b>espressif.github.io/esptool-js</b>, Connect, address <b>0x0</b>, file <code>SpoolFilmProcessor_v2.2_full.bin</code>, Program.</li>
+<li><i>Or</i> in Chrome or Edge open <b>espressif.github.io/esptool-js</b>, Connect, address <b>0x0</b>, file <code>SpoolFilmProcessor_v2.3_full.bin</code>, Program.</li>
 <li>After boot <b>tap the logo</b> and calibrate the screen (3 crosses → DONE).</li>
 </ol>
 </div>
 </div>
-<p class="cap">The flashed version is shown at the bottom right of the logo screen (“v2.2”) and in <b>Settings → Info</b> (with the build date). Source code: the <code>SpoolFilmProcessor</code> folder (Arduino IDE, esp32 package 3.x – see INSTRUCTIONS.md).</p>
+<p class="cap">The flashed version is shown at the bottom right of the logo screen (“v2.3”) and in <b>Settings → Info</b> (with the build date). Source code: the <code>SpoolFilmProcessor</code> folder (Arduino IDE, esp32 package 3.x – see INSTRUCTIONS.md).</p>
 
 <!-- ================================================================ -->
 <h2 id="usage">9. Usage – quick guide</h2>
@@ -670,7 +670,7 @@ ol li,ul li{margin:4px 0}
 <h3>Probe not in chemistry</h3>
 <ul>
 <li>The room temperature is stored once, on NEXT.</li>
-<li>During pre-wash and rinses the probe works as a <b>tap-water thermometer</b>: drop of ~1 °C within a few seconds = water poured out (tank cooling counted from then), rise = refilled, max, “steady”. Colours: blue &lt; 38 °C, green 38–45 °C, red &gt; 45 °C.</li>
+<li>During pre-wash and rinses the probe works as a <b>tap-water thermometer</b>: drop of ~0.4 °C within ~12 s = water poured out (tank cooling counted from then), rise = refilled, max, “steady”. Colours: blue &lt; 38 °C, green 38–45 °C, red &gt; 45 °C.</li>
 <li>Beeps: <b>too hot</b> – fast and high, <b>too cold</b> – slow and low.</li>
 <li>The chemistry temperature is computed by the thermal model of the tank (Paterson Multi Reel 3) and the time is extended accordingly.</li>
 </ul>

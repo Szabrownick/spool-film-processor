@@ -88,7 +88,7 @@ spool-film-processor\
    hold **BOOT**, briefly press **RESET** (复位), release **BOOT** and upload again. Press **RESET** after flashing.
 5. Open **Tools → Serial Monitor** at **115200**. You should see something like:
    ```
-   [FILM PROCESSOR] start, FW 2.2
+   [FILM PROCESSOR] start, FW 2.3
    [TOUCH] znaleziono: adres 0x15, SDA=GPIO4, SCL=GPIO5, typ=CST816/FT6x36
    [TEMP] DS18B20 znaleziony: 28FF....
    ```

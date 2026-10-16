@@ -4,7 +4,7 @@
 
 A DIY film developing processor (C-41, B&W, E-6, ECN-2, RA-4). A stepper motor agitates the reels inside the tank, and everything is controlled from a small 2.4" touch screen (about 49×38 mm). The firmware times every step and corrects the time live for chemistry temperature and chemistry reuse.
 
-**Firmware version: v2.2**
+**Firmware version: v2.3**
 
 <p align="center">
   <img src="docs/screens/00_intro.png" width="320" alt="Boot screen">
@@ -126,7 +126,7 @@ All screenshots are taken directly from the device (320×240 screen, scaled 2× 
 </tr>
 <tr>
 <td width="50%" valign="top"><b>First step:</b> “roll 6/16” at the top (chemistry usage check), estimated time of the whole process at the bottom.</td>
-<td width="50%" valign="top"><b>Pre-wash:</b> the probe measures the tap water in the tank. A drop of about 1 °C within a few seconds means the water is being poured out – tank cooling is counted from that moment; a rise means it was refilled. Green = 38–45 °C.</td>
+<td width="50%" valign="top"><b>Pre-wash:</b> the probe measures the tap water in the tank. A drop of about 0.4 °C within a few seconds means the water is being poured out – tank cooling is counted from that moment; a rise means it was refilled. Green = 38–45 °C.</td>
 </tr>
 <tr>
 <td width="50%" valign="top" align="center"><img src="docs/screens/08g_water_drained.png" width="100%"></td>
@@ -220,7 +220,7 @@ All screenshots are taken directly from the device (320×240 screen, scaled 2× 
 </tr>
 </table>
 
-*Screenshots taken on the device running v2.2.*
+*Screenshots taken on the device running v2.2–v2.3.*
 
 ---
 
@@ -241,7 +241,7 @@ So if the chemistry cools down during the step, the step gets longer by exactly 
 With little chemistry (e.g. an upright Paterson with 3 reels) the probe does not reach the liquid and measures air. Then:
 
 - the **room temperature** is stored once, at the start;
-- during **pre-wash and rinses** the probe works as a **tap-water thermometer**: a drop of ≥ 1 °C within about 8 s (pouring out takes 6–7 s) means the water is being poured out and tank cooling is counted from the start of the drop; a rise of 0.2 °C means the tank was refilled with water at the current reading; a colder tap setting is recognised because the reading levels off instead of falling towards room temperature; it shows the maximum and “steady” once the tank is full, and **beeps** when the water is too hot (> 45 °C) or too cold (< 38 °C);
+- during **pre-wash and rinses** the probe works as a **tap-water thermometer**: a drop of ≥ 0.4 °C within about 12 s means the water is being poured out (the probe cools slowly in air, ~0.05 °C/s) and tank cooling is counted from the start of the drop; a rise of 0.2 °C means the tank was refilled with water at the current reading; a colder tap setting is recognised because the reading levels off instead of falling towards room temperature; it shows the maximum and “steady” once the tank is full, and **beeps** when the water is too hot (> 45 °C) or too cold (< 38 °C);
 - the **chemistry temperature is computed by a thermal model of the tank**: liquid ↔ walls and reels ↔ room. It includes natural convection (Churchill–Chu correlations for a vertical wall and a horizontal cylinder), radiation, conduction through the polystyrene wall and the water left in the tank. The model runs in real time, including while the empty tank waits for the chemistry;
 - example (500 ml, upright, room 21 °C, ADOX 3:15): tank after a 45 °C pre-wash → chemistry 38.0 → 37.7 °C, correction 0…+3 s. Cold tank → +33 s.
 
@@ -271,7 +271,7 @@ The board exposes only two free pins: GPIO21 drives the motor (UART) and GPIO20 
 
 ### Build diagrams
 
-From the [documentation PDF](SpoolFilmProcessor_documentation_v2.2.pdf).
+From the [documentation PDF](SpoolFilmProcessor_documentation_v2.3.pdf).
 
 **Main wiring** – ESP32-C3, TMC2209, DS18B20, XL6009, charger module, battery:
 
@@ -308,7 +308,7 @@ From the [documentation PDF](SpoolFilmProcessor_documentation_v2.2.pdf).
 </tr>
 </table>
 
-Full bill of materials, schematics, wiring tables, assembly and sealing details: **[SpoolFilmProcessor_documentation_v2.2.pdf](SpoolFilmProcessor_documentation_v2.2.pdf)** (source: [documentation.html](documentation.html); Polish version in [docs/pl](docs/pl)).
+Full bill of materials, schematics, wiring tables, assembly and sealing details: **[SpoolFilmProcessor_documentation_v2.3.pdf](SpoolFilmProcessor_documentation_v2.3.pdf)** (source: [documentation.html](documentation.html); Polish version in [docs/pl](docs/pl)).
 
 ---
 
@@ -316,10 +316,10 @@ Full bill of materials, schematics, wiring tables, assembly and sealing details:
 
 | Method | File | Settings on the board |
 |---|---|---|
-| Arduino IDE | folder [SpoolFilmProcessor](SpoolFilmProcessor) or [SpoolFilmProcessor_v2.2_ArduinoIDE.zip](firmware/SpoolFilmProcessor_v2.2_ArduinoIDE.zip) | kept |
-| WiFi (Settings → WiFi update, network `FilmProcessor`, http://192.168.4.1) | [firmware/SpoolFilmProcessor_v2.2_update.bin](firmware/SpoolFilmProcessor_v2.2_update.bin) | kept |
+| Arduino IDE | folder [SpoolFilmProcessor](SpoolFilmProcessor) or [SpoolFilmProcessor_v2.3_ArduinoIDE.zip](firmware/SpoolFilmProcessor_v2.3_ArduinoIDE.zip) | kept |
+| WiFi (Settings → WiFi update, network `FilmProcessor`, http://192.168.4.1) | [firmware/SpoolFilmProcessor_v2.3_update.bin](firmware/SpoolFilmProcessor_v2.3_update.bin) | kept |
 | USB, update | `firmware/flash_update.bat` | kept |
-| USB, new board (address 0x0) | `firmware/flash_full.bat` / [SpoolFilmProcessor_v2.2_full.bin](firmware/SpoolFilmProcessor_v2.2_full.bin) | erased |
+| USB, new board (address 0x0) | `firmware/flash_full.bat` / [SpoolFilmProcessor_v2.3_full.bin](firmware/SpoolFilmProcessor_v2.3_full.bin) | erased |
 
 The `.bat` scripts need `esptool.exe` in the `firmware` folder – download `esptool-windows-amd64.zip` from [espressif/esptool releases](https://github.com/espressif/esptool/releases). A new board can also be flashed without the scripts: [esptool-js](https://espressif.github.io/esptool-js/) in Chrome or Edge, address `0x0`.
 
@@ -334,7 +334,7 @@ SpoolFilmProcessor/   source code (Arduino)
 firmware/           ready-made .bin files, flashing scripts, Arduino IDE ZIP
 docs/screens/       screenshots from the device
 documentation.html  documentation (BOM, schematics, assembly, seals, usage)
-SpoolFilmProcessor_documentation_v2.2.pdf
+SpoolFilmProcessor_documentation_v2.3.pdf
 INSTRUCTIONS.md     environment setup, flashing and testing, step by step
 docs/photos/        photos of the build and the Fusion 360 model
 docs/schematics/    build diagrams (wiring, speaker, pinouts, shaft seal)

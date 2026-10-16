@@ -4,7 +4,7 @@
 // =====================================================================
 #pragma once
 
-#define FW_VERSION "2.2"
+#define FW_VERSION "2.3"
 // data kompilacji (np. "Oct 10 2026 14:05") - widoczna na intro i w INFORMACJE
 #define FW_BUILD   __DATE__ " " __TIME__
 #define TOUCH_MIN_GAP_MS  250   // minimalny odstep miedzy kolejnymi kliknieciami

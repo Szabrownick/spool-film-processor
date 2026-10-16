@@ -1144,9 +1144,11 @@ void runCaptureRoom() {
 //  - ZABEZPIECZENIA: odczyt wrocil w okolice pokoju (brak kontaktu) -> pusty od
 //             poczatku spadku; DALEJ, gdy odczyt juz opadal -> to samo (runNextStep).
 // Odczyty DS18B20 (12 bit) przychodza co ok. 0,8 s; historia 20 probek = ok. 14 s.
-// Progi sprawdzone symulacja: sonda w wodzie tau ~3 s, w powietrzu 10-90 s.
-#define DRAIN_DROP  1.0f
-#define DRAIN_WIN   8000
+// Progi z pomiaru sondy uzytkownika: w powietrzu tau ~96 s (z 30 C spada ok. 0,05 C/s),
+// w wodzie tau ~9 s; potwierdzone symulacja dla wody 38-45 C.
+#define DRAIN_DROP  0.4f        // woda stojaca w koreksie stygnie ~0,005 C/s - nie da 0,4 C w 12 s
+#define DRAIN_WIN   12000
+#define UNDO_QUIET  10000       // po cofnieciu (chlodniejsza woda): sonda jeszcze dochodzi do wody
 #define REFILL_RISE 0.2f
 #define FLAT_DELTA  0.15f
 #define FLAT_WIN    4000
@@ -1163,6 +1165,7 @@ struct WaterTrack {
   uint32_t drainAt = 0;       // poczatek wylewania
   float wallAtDrain = NAN;    // temperatura koreksu w tej chwili
   uint32_t detAt = 0;         // kiedy wykryto wylanie
+  uint32_t quietUntil = 0;    // do tej chwili nie wykrywaj wylania (po cofnieciu)
   float decT = -99;           // poczatek biezacego spadku: odczyt, czas, koreks
   uint32_t decAt = 0;
   float decWall = NAN;
@@ -1177,6 +1180,7 @@ static void waterDrain(float Tlast, uint32_t at, float wall, uint32_t now, float
   wt.falling = true; wt.justDrained = true;
   wt.last = Tlast; wt.drainAt = at; wt.wallAtDrain = wall;
   wt.detAt = now; wt.lo = T;
+  Serial.printf("[WODA] wylana: byla %.2f C, od %.1f s temu (wykryto przy %.2f C)\n", Tlast, (now - at) / 1000.0f, T);
 }
 void waterUpdate() {
   if (!thermo.valid) return;
@@ -1192,13 +1196,25 @@ void waterUpdate() {
   if (!wt.falling) {
     if (wt.contact) wt.everFull = true;
     // poczatek biezacego spadku: ostatnia chwila, gdy odczyt nie byl ponizej poziomu
-    if (T >= wt.decT - 0.1f) { wt.decT = T; wt.decAt = now; wt.decWall = run.Twall; }
+    // (poziom tylko rosnie - przy wolnym spadku nie "schodzi" razem z odczytem; przy
+    // ustalonym odczycie w wodzie ustawiany od nowa, bo woda w koreksie powoli stygnie)
+    if (T >= wt.decT - 0.1f || wt.stable) {
+      if (T > wt.decT || wt.stable) wt.decT = T;
+      wt.decAt = now; wt.decWall = run.Twall;
+    }
     // spadek o DRAIN_DROP wzgledem maksimum z okna DRAIN_WIN = wylewanie
     int iMax = -1;
     for (int i = 0; i < wt.nHist; i++)
-      if (now - wt.hist[i].t <= DRAIN_WIN && (iMax < 0 || wt.hist[i].T > wt.hist[iMax].T)) iMax = i;
-    if (wt.everFull && iMax >= 0 && wt.hist[iMax].T - T >= DRAIN_DROP && wt.hist[iMax].T > Ta + 2.0f)
-      waterDrain(wt.decT, wt.decAt, wt.decWall, now, T);   // pusty od poczatku spadku
+      if (now - wt.hist[i].t <= DRAIN_WIN && wt.hist[i].t + UNDO_QUIET >= wt.quietUntil &&
+          (iMax < 0 || wt.hist[i].T > wt.hist[iMax].T)) iMax = i;
+    if (now >= wt.quietUntil && wt.everFull && iMax >= 0 && wt.hist[iMax].T - T >= DRAIN_DROP && wt.hist[iMax].T > Ta + 2.0f) {
+      // poczatek spadku = OSTATNIA probka jeszcze przy maksimum (+-0,07 C = ok. 1 krok
+      // rozdzielczosci); przy wolnej sondzie spadek idzie po 0,05 C na odczyt
+      int j = iMax;
+      for (int i = iMax; i < wt.nHist; i++)
+        if (wt.hist[i].T >= wt.hist[iMax].T - 0.07f) j = i;
+      waterDrain(wt.hist[iMax].T, wt.hist[j].t, wt.hist[j].wall, now, T);
+    }
     else if (wt.everFull && !wt.contact)            // sonda wrocila do temperatury pokoju
       waterDrain(wt.decT, wt.decAt, wt.decWall, now, T);
   } else {
@@ -1208,9 +1224,12 @@ void waterUpdate() {
       if (now - wt.hist[i].t >= FLAT_WIN && now - wt.hist[i].t <= FLAT_WIN + 800) iOld = i;
     if (T >= wt.lo + REFILL_RISE && wt.contact) {   // nalana - koreks znow pelny
       wt.falling = false;
+      Serial.printf("[WODA] nalana: %.2f C (minimum %.2f C)\n", T, wt.lo);
       wt.decT = T; wt.decAt = now; wt.decWall = run.Twall;
     } else if (iOld >= 0 && now - wt.detAt >= FLAT_WIN && T > Ta + 5.0f && fabsf(T - wt.hist[iOld].T) < FLAT_DELTA) {
       wt.falling = false; wt.undoDrain = true;      // odczyt sie wyplaszczyl w cieple: chlodniejsza woda
+      wt.quietUntil = now + UNDO_QUIET;
+      Serial.printf("[WODA] chlodniejsza woda %.2f C - cofam wylanie\n", T);
       wt.decT = T; wt.decAt = now; wt.decWall = wt.wallAtDrain;
     }
   }
