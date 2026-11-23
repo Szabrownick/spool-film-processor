@@ -409,6 +409,13 @@ void loop() {
   calibTick();
   marqueeTick();
   if (bootio.takePress()) bootPressed();
+  // BOOT przytrzymany 1 s w trakcie kroku = PAUZA / WZNOW (krotkie wcisniecie nic nie robi)
+  static uint32_t bootDownAt = 0;
+  static bool bootDone = false;
+  if (scr == S_RUN && run.phase == R_RUN && bootio.isDown()) {
+    if (!bootDownAt) bootDownAt = now;
+    if (!bootDone && now - bootDownAt > 1000) { bootDone = true; runButton(B_RPAUSE); }
+  } else { bootDownAt = 0; bootDone = false; }
 
   if (fullRedraw) { fullRedraw = false; drawFull(); lastDyn = now; }
   if (now - lastDyn >= 250) { lastDyn = now; drawDynamic(); }

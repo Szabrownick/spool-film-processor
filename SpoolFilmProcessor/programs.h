@@ -204,6 +204,7 @@ void settingsDefault(Settings &s, bool keepTouch) {
 int16_t rollStartSec = 30;    // ADOX C-TEC 41: pierwsze 30 s mieszac intensywnie
 int16_t rollBurstSec = 30;    // co 30 s seria zmian kierunku
 int16_t rollBurstN = 4;       // 4 zmiany kierunku w serii
+int16_t pourSec = 10;        // wlewanie / wylewanie [s] - wliczone w czas kroku (zegar od poczatku wlewania)
 AgitParams agitParams() {
   AgitParams p;
   p.rollRpm = S.rollRpm;   p.rollT1 = S.rollT1;   p.rollT2 = S.rollT2;
@@ -284,7 +285,7 @@ KitStepType kitStepType(const Step &s) {
 }
 void saveSettings() {
   prefs.putBytes("set", &S, sizeof(Settings));
-  prefs.putShort("rS", rollStartSec); prefs.putShort("rB", rollBurstSec); prefs.putShort("rN", rollBurstN);
+  prefs.putShort("rS", rollStartSec); prefs.putShort("rB", rollBurstSec); prefs.putShort("rN", rollBurstN); prefs.putShort("pS", pourSec);
 }
 
 void saveChem(int idx);
@@ -298,6 +299,7 @@ void storageBegin() {
   rollStartSec = constrain((int)prefs.getShort("rS", 30), 0, 120);
   rollBurstSec = constrain((int)prefs.getShort("rB", 30), 0, 120);
   rollBurstN = constrain((int)prefs.getShort("rN", 4), 1, 8);
+  pourSec = constrain((int)prefs.getShort("pS", 10), 0, 30);
   for (int i = 0; i < NUM_PROGS; i++) {
     char k[6]; progKey(i, k);
     bool ok = prefs.getBytesLength(k) == sizeof(Program) && prefs.getBytes(k, &progs[i], sizeof(Program)) &&

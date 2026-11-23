@@ -321,7 +321,7 @@ enum : uint16_t {
   B_CDONE = 110, B_CAGAIN = 111,
   B_YES = 120, B_NO = 121,
   B_CFRESH = 130, B_CUSED = 131, B_CRM = 132, B_CRP = 133, B_CKM = 134, B_CKP = 135,
-  B_CGO = 136, B_CCANCEL = 137, B_DTM = 138, B_DTP = 139,
+  B_CGO = 136, B_CCANCEL = 137, B_DTM = 138, B_DTP = 139, B_CTM = 146, B_CTP = 147,
   B_CAT0 = 140,                     // 140..145 kafle rodzajow procesu
   B_SUV = 150, B_SUH = 151, B_SUPY = 152, B_SUPN = 153, B_SUVM = 154, B_SUVP = 155, B_SUGO = 156, B_SUTM = 157, B_SUTP = 158,
   B_ITEM0 = 1000                   // 1000 + wiersz*4 + {0:-, 1:+, 2:przycisk}
@@ -350,7 +350,7 @@ int curProg = 0;
 int progScroll = 0;
 int curStep = 0;
 
-enum MenuId : uint8_t { M_SETTINGS, M_ROLL, M_STICK, M_STAND, M_BWRED, M_RESET, M_STEP, M_TSRC };
+enum MenuId : uint8_t { M_SETTINGS, M_SERVICE, M_ROLL, M_STICK, M_STAND, M_BWRED, M_RESET, M_STEP, M_TSRC };
 void openMenu(MenuId m);
 extern int16_t runNoTherm, runVolMl;
 MenuId menuId = M_SETTINGS;
@@ -778,6 +778,13 @@ void drawChemValues() {
     txtP(g, kitName(c.kit), 106, 15, 1, C_TXT);
     boxEnd(54, 120);
   }
+  g = boxBegin(74, 36, C_BG);
+  if (g) {
+    snprintf(b, sizeof(b), TR("%d rol.", "%d roll"), max(1, (int)c.tank));
+    g->setFont(F_SB);
+    txtP(g, b, 37, 18, 1, C_TXT);
+    boxEnd(43, 200);
+  }
   drawChemInfo();
 }
 
@@ -798,8 +805,10 @@ void drawChem() {
 
   button(B_CKM, 6, 120, 44, 30, "<", C_BTN2, C_WHITE, F_M);
   button(B_CKP, 270, 120, 44, 30, ">", C_BTN2, C_WHITE, F_M);
-  button(B_CCANCEL, 6, 200, 100, 36, TR("ANULUJ", "CANCEL"), C_BTN2);
-  button(B_CGO, 112, 200, 202, 36, "START", C_GREEN, C_WHITE, F_M);
+  // ile rolek teraz w koreksie (zamiast ANULUJ - cofniecie jest w naglowku)
+  button(B_CTM, 6, 200, 36, 36, "-", C_BTN2, C_WHITE, F_M, true);
+  button(B_CTP, 118, 200, 36, 36, "+", C_BTN2, C_WHITE, F_M, true);
+  button(B_CGO, 160, 200, 154, 36, "START", C_GREEN, C_WHITE, F_M);
   drawChemValues();
 }
 
@@ -814,6 +823,8 @@ void chemButton(uint16_t id) {
     case B_CRP: { bool was0 = c.used == 0; c.used = min(999, c.used + mul); if (was0) fullRedraw = true; break; }
     case B_CKM: c.kit = (c.kit + NUM_KITS - 1) % NUM_KITS; break;
     case B_CKP: c.kit = (c.kit + 1) % NUM_KITS; break;
+    case B_CTM: c.tank = max(1, c.tank - 1); break;
+    case B_CTP: c.tank = min(8, c.tank + 1); break;
     case B_CCANCEL: saveChem(curProg); goScreen(S_PROG); return;
     case B_CGO: saveChem(curProg); runStart(curProg); return;
   }
@@ -833,7 +844,7 @@ struct Item {
   const char *const *names;
   uint8_t act;
 };
-enum : uint8_t { A_NONE, A_SUB_ROLL, A_SUB_STICK, A_SUB_STAND, A_SUB_BWRED, A_SUB_RESET, A_CALIB,
+enum : uint8_t { A_NONE, A_SUB_SERVICE, A_SUB_ROLL, A_SUB_STICK, A_SUB_STAND, A_SUB_BWRED, A_SUB_RESET, A_CALIB,
                  A_MOTOR, A_OTA, A_INFO, A_RST_DEF, A_RST_CUST, A_RST_SET, A_FACTORY,
                  A_STEP_UP, A_STEP_DEL };
 Item items[16];
@@ -854,6 +865,7 @@ void buildMenu() {
       addItem(TR("Jezyk", "Language"), IT_ENUM, &gLang, 0, 1, 1, "", LANG_NAMES);
       addItem(TR("Dzwiek", "Sound"), IT_BOOL, &S.sound);
       addItem(TR("Pikanie co minute", "Beep every minute"), IT_BOOLN, &S.noMinuteBeep);
+      addItem(TR("Czas wlewania", "Pour time"), IT_INT, &pourSec, 0, 30, 1, "s");
       addItem(TR("Jasnosc", "Brightness"), IT_INT, &S.brightness, 10, 100, 10, "%");
       addItem(TR("Obrot ekranu 180~", "Rotate screen 180~"), IT_BOOL, &S.flip);
       addItem(TR("Jednostki", "Units"), IT_ENUM, &S.tempF, 0, 1, 1, "", UNIT_NAMES);
@@ -861,6 +873,9 @@ void buildMenu() {
       addItem(TR("Agitacja STICK", "Stick agitation"), IT_ACT, nullptr, 0, 0, 0, "", nullptr, A_SUB_STICK);
       addItem(TR("Agitacja STAND", "Stand agitation"), IT_ACT, nullptr, 0, 0, 0, "", nullptr, A_SUB_STAND);
       addItem(TR("Redukcja czasu B&W", "B&W time reduction"), IT_ACT, nullptr, 0, 0, 0, "", nullptr, A_SUB_BWRED);
+      addItem(TR("Serwis", "Service"), IT_ACT, nullptr, 0, 0, 0, "", nullptr, A_SUB_SERVICE);
+      break;
+    case M_SERVICE:   // rzadko uzywane - osobno, zeby nie zasmiecac ustawien
       addItem(TR("Prad silnika", "Motor current"), IT_INT, &S.currentmA, CURRENT_MIN_MA, CURRENT_MAX_MA, 50, "mA");
       addItem(TR("Korekta czujnika", "Sensor offset"), IT_TEMPD, &S.tempOffset10, -50, 50, 1);
       addItem(TR("Kalibracja dotyku", "Touch calibration"), IT_ACT, nullptr, 0, 0, 0, "", nullptr, A_CALIB);
@@ -930,6 +945,7 @@ void buildMenu() {
 const char *menuTitle() {
   switch (menuId) {
     case M_SETTINGS: return TR("USTAWIENIA", "SETTINGS");
+    case M_SERVICE: return TR("SERWIS", "SERVICE");
     case M_ROLL: return TR("AGITACJA ROLL", "ROLL AGITATION");
     case M_STICK: return TR("AGITACJA STICK", "STICK AGITATION");
     case M_STAND: return TR("AGITACJA STAND", "STAND AGITATION");
@@ -1094,6 +1110,8 @@ struct RunState {
   float Troom = 22.0f;      // temperatura pokoju zapisana RAZ na starcie (czujnik w powietrzu)
   bool roomSet = false;
   bool modelOn = false;     // model sledzi koreks od DALEJ na ekranie START
+  bool draining = false;    // ostatnie pourSec s kroku: silnik stoi, wylewanie
+  bool usageSaved = false;  // rolki juz doliczone do zuzycia chemii (po kroku DEV)
   uint8_t resumed = 0;      // wznowiono po resecie: 1 = czas przerwy znany, 2 = nieznany (zanik zasilania)
   uint32_t resumedAt = 0;
 } run;
@@ -1370,13 +1388,13 @@ float runRemainingEstimate() {
     float st = runStepEstimate(i);
     float perChg = st / nch;
     if (i == run.step && run.phase == R_RUN) {
-      sum += run.timer.remaining() + (nch - run.change - 1) * (perChg + POUR_EST_SEC) + OVERRUN_SEC;
+      sum += run.timer.remaining() + (nch - run.change - 1) * (perChg + POUR_EST_SEC) ;
     } else if (i == run.step && run.phase == R_OVERRUN) {
-      sum += max(0, OVERRUN_SEC - (int)((millis() - run.overrunStart) / 1000));
+      sum += 0;
     } else if (i == run.step) {                          // R_POUR (tez kolejna zmiana wody)
-      sum += (nch - run.change) * (perChg + POUR_EST_SEC) + OVERRUN_SEC;
+      sum += (nch - run.change) * (perChg + POUR_EST_SEC) ;
     } else {
-      sum += st + nch * POUR_EST_SEC + OVERRUN_SEC;
+      sum += st + nch * POUR_EST_SEC ;
     }
   }
   return sum;
@@ -1395,11 +1413,12 @@ float runRemainingEstimate() {
 // =====================================================================
 #include <esp_system.h>
 #include <sys/time.h>
-#define CKPT_MAGIC    0x5C02
+#define CKPT_MAGIC    0x5C03
 #define CKPT_EVERY_MS 5000
 struct RunCkpt {
   uint16_t magic;
   uint8_t prog, step, phase, change, paused, tankRolls, roomSet, modelOn;
+  uint8_t usageSaved, draining;
   int16_t noTherm, volMl, horiz, preT;
   float progress, elapsed, curveF, Tmodel, Twall, Troom;
   uint32_t procSec;           // czas procesu do chwili zapisu [s]
@@ -1413,7 +1432,7 @@ void runCkptSave() {
   RunCkpt c{};
   c.magic = CKPT_MAGIC;
   c.prog = run.prog; c.step = run.step; c.phase = run.phase; c.change = run.change;
-  c.paused = run.paused; c.tankRolls = run.tankRolls; c.roomSet = run.roomSet; c.modelOn = run.modelOn;
+  c.paused = run.paused; c.tankRolls = run.tankRolls; c.usageSaved = run.usageSaved; c.draining = run.draining; c.roomSet = run.roomSet; c.modelOn = run.modelOn;
   c.noTherm = runNoTherm; c.volMl = runVolMl; c.horiz = runHoriz; c.preT = runPreT;
   c.progress = run.timer.progress; c.elapsed = run.timer.elapsed; c.curveF = run.timer.curveF;
   c.Tmodel = run.Tmodel; c.Twall = run.Twall; c.Troom = run.Troom;
@@ -1446,7 +1465,7 @@ bool runResume() {
   run = RunState();
   waterReset();
   run.prog = c.prog; run.step = c.step; run.phase = (RunPhase)c.phase; run.change = c.change;
-  run.paused = c.paused; run.tankRolls = max(1, (int)c.tankRolls);
+  run.paused = c.paused; run.tankRolls = max(1, (int)c.tankRolls); run.usageSaved = c.usageSaved;
   run.roomSet = c.roomSet; run.modelOn = c.modelOn;
   run.Tmodel = c.Tmodel; run.Twall = c.Twall; run.Troom = c.Troom;
   runNoTherm = c.noTherm; runVolMl = c.volMl; runHoriz = c.horiz; runPreT = c.preT;
@@ -1498,6 +1517,7 @@ void runBeginStep() {
   run.lastTick = millis();
   run.phase = R_RUN;
   run.paused = false;
+  run.draining = false;
   if (s.agit != AG_NONE) agitator.start((AgitMode)s.agit, agitParams());
   else agitator.stop();
   BEEP(PAT_OK);
@@ -1505,6 +1525,7 @@ void runBeginStep() {
   fullRedraw = true;
 }
 
+void runFinishSave();
 void runNextStep() {
   agitator.stop();
   // DALEJ w kroku z woda (czujnik w powietrzu), gdy wylania nie wykryto, ale odczyt
@@ -1513,6 +1534,8 @@ void runNextStep() {
   if (runNoTherm && run.modelOn && waterStep(progs[run.prog].s[run.step]) && wt.everFull && !wt.falling &&
       thermo.valid && thermo.t < wt.decT - 0.5f && !isnan(wt.decWall))
     run.Twall = coolEmptyStep(wt.decWall, roomTemp(), runHoriz, (millis() - wt.decAt) / 1000.0f);
+  // zuzycie chemii liczone zaraz po wywolywaczu - STOP pozniej juz go nie zgubi
+  if (!run.usageSaved && kitStepType(progs[run.prog].s[run.step]) == KS_DEV) runFinishSave();
   waterReset();
   run.step++;
   run.change = 0;
@@ -1655,6 +1678,11 @@ void runTick() {
       }
     } else lostSince = 0;
     if (now - ckptLast >= CKPT_EVERY_MS) runCkptSave();
+    // wylewanie trwa tyle co wlewanie: zaczyna sie pourSec s przed koncem czasu,
+    // silnik staje, zeby wylac - chemia przestaje dzialac dokladnie z koncem kroku
+    if (pourSec > 0 && !run.draining && run.timer.remaining() <= pourSec && run.timer.elapsed > pourSec) {
+      run.draining = true; agitator.pause(true); BEEP(PAT_ALARM); fullRedraw = true;
+    }
     // Pikanie co pelna minute: przy 3:00 -> 3x, 2:00 -> 2x, 1:00 -> 1x.
     // Kompensacja moze wydluzyc czas (chemia stygnie) - wtedy nie powtarzamy
     // ogloszenia, czekamy az czas zejdzie ponizej kolejnej pelnej minuty.
@@ -1675,11 +1703,8 @@ void runTick() {
         fullRedraw = true;
         return;
       }
-      run.phase = R_OVERRUN;               // silnik pracuje jeszcze 15 s
-      run.overrunStart = now;
-      runCkptSave();
-      BEEP(PAT_ALARM);
-      fullRedraw = true;
+      runNextStep();                       // wylane w ostatnich pourSec s - od razu nastepny krok
+      return;
     }
   } else if (run.phase == R_OVERRUN) {
     if (now - run.overrunStart >= OVERRUN_SEC * 1000UL) runNextStep();
@@ -1754,14 +1779,15 @@ void drawRunDynamic() {
       }
       // po resecie: "PO RESECIE" (przerwa nieznana - krok czeka w pauzie)
       // albo "WZNOWIONO" przez minute (przerwa znana i doliczona)
-      bool resNote = run.resumed == 2 || (run.resumed == 1 && millis() - run.resumedAt < 60000);
+      if (run.draining) { g->setFont(F_SB); txtP(g, TR("WYLEJ!", "DRAIN!"), 204, 14, 2, C_RED2); }
+      bool resNote = !run.draining && (run.resumed == 2 || (run.resumed == 1 && millis() - run.resumedAt < 60000));
       if (resNote) {
         g->setFont(F_SB);
         txtP(g, run.resumed == 2 ? TR("PO RESECIE", "AFTER RESET") : TR("WZNOWIONO", "RESUMED"), 204, 14, 2,
              run.resumed == 2 ? C_RED2 : C_ACC);
       }
-      else if (run.paused) { g->setFont(F_SB); txtP(g, TR("PAUZA", "PAUSE"), 204, 14, 2, C_RED2); }
-      else if (rinseChg[run.prog][run.step] > 0) {
+      else if (run.paused && !run.draining) { g->setFont(F_SB); txtP(g, TR("PAUZA", "PAUSE"), 204, 14, 2, C_RED2); }
+      else if (!run.draining && rinseChg[run.prog][run.step] > 0) {
         snprintf(b, sizeof(b), "%d/%d", run.change + 1, rinseChg[run.prog][run.step]);
         g->setFont(F_SB);
         txtP(g, b, 204, 14, 2, C_ACC);
@@ -1769,7 +1795,7 @@ void drawRunDynamic() {
       fmtTime(b, sizeof(b), (int)ceilf(run.timer.remaining()));
       g->setFont(F_7SEG);
       g->setTextSize(1.4f);
-      g->setTextColor(run.paused ? C_DIM : C_TXT);
+      g->setTextColor(run.draining ? C_RED2 : (run.paused ? C_DIM : C_TXT));
       g->setTextDatum(lgfx::textdatum_t::middle_center);
       g->drawString(b, 106, 66);
       g->setTextSize(1);
@@ -1972,8 +1998,9 @@ void drawRun() {
     tft.setFont(F_M);
     txt(&tft, b, 240, 162, 1, C_TXT);
     const ChemState &c = chem[run.prog];
-    if (KITS[c.kit].maxRolls) snprintf(b, sizeof(b), TR("zuzycie chemii: %d -> %d / %d rolek", "chemistry use: %d -> %d / %d rolls"), c.used, c.used + run.tankRolls, KITS[c.kit].maxRolls);
-    else snprintf(b, sizeof(b), TR("zuzycie chemii: %d -> %d rolek", "chemistry use: %d -> %d rolls"), c.used, c.used + run.tankRolls);
+    int u0 = c.used - (run.usageSaved ? run.tankRolls : 0);
+    if (KITS[c.kit].maxRolls) snprintf(b, sizeof(b), TR("zuzycie chemii: %d -> %d / %d rolek", "chemistry use: %d -> %d / %d rolls"), u0, u0 + run.tankRolls, KITS[c.kit].maxRolls);
+    else snprintf(b, sizeof(b), TR("zuzycie chemii: %d -> %d rolek", "chemistry use: %d -> %d rolls"), u0, u0 + run.tankRolls);
     tft.fillRect(0, 179, SCR_W, 14, C_BG);
     tft.setFont(&lgfx::fonts::Font0);
     txt(&tft, b, 160, 186, 1, C_DIM);
@@ -2022,22 +2049,30 @@ void drawRun() {
 // po udanym procesie: dolicz rolki do zuzycia chemii i zapamietaj (pamiec trwala)
 void runFinishSave() {
   ChemState &c = chem[run.prog];
+  if (run.usageSaved) return;
+  run.usageSaved = true;
   c.used = min(999, c.used + run.tankRolls);
   c.tank = run.tankRolls;
   saveChem(run.prog);
+}
+// zmiana liczby rolek (ekran START lub GOTOWE); po doliczeniu poprawia tez licznik
+void runRolls(int d) {
+  int n = constrain(run.tankRolls + d, 1, 8);
+  if (run.usageSaved) { chem[run.prog].used = max(0, chem[run.prog].used + n - run.tankRolls); chem[run.prog].tank = n; saveChem(run.prog); }
+  run.tankRolls = n;
 }
 
 void runButton(uint16_t id) {
   switch (id) {
     case B_RSTART: if (run.phase == R_POUR) runBeginStep(); break;
     case B_RPAUSE:
-      if (run.phase == R_RUN) { run.paused = !run.paused; agitator.pause(run.paused); run.resumed = 0; runCkptSave(); fullRedraw = true; }
+      if (run.phase == R_RUN) { run.paused = !run.paused; agitator.pause(run.paused || run.draining); run.resumed = 0; runCkptSave(); fullRedraw = true; }
       break;
     case B_RSKIP: if (armed(B_RSKIP)) runNextStep(); break;
     case B_RSTOP: if (armed(B_RSTOP)) runStop(); break;
     case B_RNEXT: runNextStep(); break;
-    case B_DTM: run.tankRolls = max(1, run.tankRolls - 1); fullRedraw = true; break;
-    case B_DTP: run.tankRolls = min(8, run.tankRolls + 1); fullRedraw = true; break;
+    case B_DTM: runRolls(-1); fullRedraw = true; break;
+    case B_DTP: runRolls(+1); fullRedraw = true; break;
     case B_ROK: runFinishSave(); runCkptClear(); goScreen(S_PROG); break;
     case B_RTEMP: if (run.phase == R_POUR) goScreen(S_SETUP); break;
   }
@@ -2050,7 +2085,7 @@ void bootPressed() {
   if (scr != S_RUN) return;
   switch (run.phase) {
     case R_POUR: runBeginStep(); break;
-    case R_RUN: runButton(B_RPAUSE); break;
+    case R_RUN: break;              // pauza: przytrzymaj BOOT 1 s (mokra reka)
     case R_OVERRUN: runNextStep(); break;
     case R_DONE: runFinishSave(); runCkptClear(); goScreen(S_PROG); break;
   }
@@ -2440,6 +2475,7 @@ void openMenu(MenuId m) { menuId = m; menuPage = 0; goScreen(S_MENU); }
 void menuAction(uint8_t act) {
   switch (act) {
     case A_SUB_ROLL: openMenu(M_ROLL); break;
+    case A_SUB_SERVICE: openMenu(M_SERVICE); break;
     case A_SUB_STICK: openMenu(M_STICK); break;
     case A_SUB_STAND: openMenu(M_STAND); break;
     case A_SUB_BWRED: openMenu(M_BWRED); break;
@@ -2476,9 +2512,10 @@ void goBack() {
       if (menuId == M_STEP) goScreen(S_PROG);
       else if (menuId == M_TSRC) { runTsrcSave(); goScreen(S_RUN); }
       else if (menuId == M_SETTINGS) goScreen(S_MAIN);
+      else if (menuId == M_RESET) { menuId = M_SERVICE; menuPage = 0; goScreen(S_MENU); }
       else { menuId = M_SETTINGS; menuPage = 0; goScreen(S_MENU); }
       break;
-    case S_MOTOR: case S_OTA: case S_INFO: openMenu(M_SETTINGS); break;
+    case S_MOTOR: case S_OTA: case S_INFO: openMenu(M_SERVICE); break;
     default: goScreen(S_MAIN);
   }
 }
