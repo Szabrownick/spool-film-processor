@@ -36,7 +36,7 @@ Samodzielnie zbudowany procesor do wywoływania filmów (C-41, B&W, E-6, ECN-2, 
 3. Przed startem urządzenie pyta o **ustawienie**: czy procesor stoi pionowo czy leży, czy czujnik dotyka chemii, ile jest chemii i jaką temperaturę ma woda do kąpieli wstępnej.
 4. Na każdym kroku ekran mówi, **co wlać**. Po naciśnięciu **START** (na ekranie albo przycisk BOOT) silnik zaczyna mieszać, a zegar odlicza czas.
 5. **Czas jest korygowany na bieżąco.** Gdy chemia jest chłodniejsza od nominalnej albo już używana, krok się wydłuża. O ile, widać na ekranie: „+1:08” oraz mnożnik, np. „x1.35”.
-6. Po końcu kroku melodia sygnalizuje **„WYLEJ”**. Silnik staje, a przez 15 s trwa odliczanie na ocieknięcie. Potem urządzenie przechodzi do kolejnego kroku.
+6. START naciśnij **na początku wlewania**: czas wlewania i wylewania (domyślnie 10 s, Ustawienia → Czas wlewania) jest wliczony w krok. Przez ostatnie 10 s silnik stoi, a ekran pokazuje czerwone **„WYLEJ!”**; z końcem czasu zaczyna się kolejny krok. Zużycie chemii zapisuje się zaraz po wywoływaczu.
 7. Na końcu pojawia się **„GOTOWE!”**. Podajesz liczbę rolek w koreksie, a urządzenie zapamiętuje zużycie chemii. Przy kolejnym procesie automatycznie wydłuży czas wywoływacza i blixu.
 
 Po włączeniu urządzenie od razu otwiera **ostatnio użyty program**. Przycisk wstecz prowadzi do listy i wyboru rodzaju procesu.
@@ -162,7 +162,7 @@ Zrzuty ekranu pochodzą prosto z urządzenia (ekran 320×240, na zrzutach powię
 <td width="50%" valign="top" align="center"><img src="docs/screens/09b_water_change.png" width="100%"></td>
 </tr>
 <tr>
-<td width="50%" valign="top"><b>WYLEJ:</b> silnik stoi, odliczanie 15 s na ocieknięcie, podpowiedź kolejnego kroku.</td>
+<td width="50%" valign="top"><b>WYLEJ:</b> ostatnie sekundy kroku, silnik stoi, podpowiedź kolejnego kroku.</td>
 <td width="50%" valign="top"><b>Zmiana wody</b> przy płukaniu zmianami (3 z 6).</td>
 </tr>
 <tr>
@@ -188,7 +188,7 @@ Zrzuty ekranu pochodzą prosto z urządzenia (ekran 320×240, na zrzutach powię
 </tr>
 <tr>
 <td width="50%" valign="top" align="center"><img src="docs/screens/13_settings_3.png" width="100%"></td>
-<td width="50%" valign="top" align="center"><img src="docs/screens/13b_settings_4.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/14b_step_edit_2.png" width="100%"></td>
 </tr>
 <tr>
 <td width="50%" valign="top">Prąd silnika, korekta czujnika, redukcja czasu B&W.</td>
@@ -314,10 +314,10 @@ Pełna lista części (BOM), schematy, tabele połączeń, montaż i uszczelnien
 
 | Sposób | Plik | Ustawienia na płytce |
 |---|---|---|
-| Arduino IDE | folder [SpoolFilmProcessor](SpoolFilmProcessor) albo [SpoolFilmProcessor_v2.4_ArduinoIDE.zip](firmware/SpoolFilmProcessor_v2.4_ArduinoIDE.zip) | zostają |
-| WiFi (Ustawienia → Aktualizacja WiFi, sieć `FilmProcessor`, http://192.168.4.1) | [firmware/SpoolFilmProcessor_v2.4_update.bin](firmware/SpoolFilmProcessor_v2.4_update.bin) | zostają |
+| Arduino IDE | folder [SpoolFilmProcessor](SpoolFilmProcessor) albo [SpoolFilmProcessor_v2.6_ArduinoIDE.zip](firmware/SpoolFilmProcessor_v2.6_ArduinoIDE.zip) | zostają |
+| WiFi (Ustawienia → Aktualizacja WiFi, sieć `FilmProcessor`, http://192.168.4.1) | [firmware/SpoolFilmProcessor_v2.6_update.bin](firmware/SpoolFilmProcessor_v2.6_update.bin) | zostają |
 | USB, aktualizacja | `firmware/flash_update.bat` | zostają |
-| USB, nowa płytka (adres 0x0) | `firmware/flash_full.bat` / [SpoolFilmProcessor_v2.4_full.bin](firmware/SpoolFilmProcessor_v2.4_full.bin) | kasowane |
+| USB, nowa płytka (adres 0x0) | `firmware/flash_full.bat` / [SpoolFilmProcessor_v2.6_full.bin](firmware/SpoolFilmProcessor_v2.6_full.bin) | kasowane |
 
 Pliki `.bat` potrzebują `esptool.exe` w folderze `firmware`. Pobierz `esptool-windows-amd64.zip` z [espressif/esptool releases](https://github.com/espressif/esptool/releases). Nową płytkę można też wgrać bez `.bat`: [esptool-js](https://espressif.github.io/esptool-js/) w Chrome lub Edge, adres `0x0`.
 

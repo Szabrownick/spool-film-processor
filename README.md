@@ -36,7 +36,7 @@ A DIY film developing processor (C-41, B&W, E-6, ECN-2, RA-4). A stepper motor a
 3. Before the run, the device asks about the **setup**: is the processor upright or lying, does the probe touch the chemistry, how much chemistry, and what is the pre-wash water temperature.
 4. For each step the screen tells you **what to pour**. Press **START** (on the screen or the BOOT button): the motor starts agitating and the timer counts down.
 5. **The time is corrected live.** If the chemistry is cooler than nominal, or already used, the step gets longer. The screen shows by how much (“+1:08”) and the total multiplier (e.g. “x1.35”).
-6. When a step ends, a melody plays and the screen shows **“DRAIN”**. The motor stops and a 15 s drain countdown runs before the next step.
+6. Press START when you **begin pouring**: pour and drain time (default 10 s, Settings → Pour time) is part of the step. In the last 10 s the motor stops and the screen shows a red **“DRAIN!”**; when the time is up the next step starts. The chemistry use counter is saved right after the developer step.
 7. At the end you get **“DONE!”**. Enter how many rolls were in the tank and the device remembers the chemistry usage. Next time it automatically lengthens the developer and blix times.
 
 After power-on the device opens the **last used program** right away. Back goes to the program list and to the process types.
@@ -162,7 +162,7 @@ All screenshots are taken directly from the device (320×240 screen, scaled 2× 
 <td width="50%" valign="top" align="center"><img src="docs/screens/09b_water_change.png" width="100%"></td>
 </tr>
 <tr>
-<td width="50%" valign="top"><b>DRAIN:</b> motor stopped, 15 s drain countdown, next step shown.</td>
+<td width="50%" valign="top"><b>DRAIN:</b> the last seconds of a step, motor stopped, next step shown.</td>
 <td width="50%" valign="top"><b>Water change</b> during a rinse by water changes (3 of 6).</td>
 </tr>
 <tr>
@@ -188,7 +188,7 @@ All screenshots are taken directly from the device (320×240 screen, scaled 2× 
 </tr>
 <tr>
 <td width="50%" valign="top" align="center"><img src="docs/screens/13_settings_3.png" width="100%"></td>
-<td width="50%" valign="top" align="center"><img src="docs/screens/13b_settings_4.png" width="100%"></td>
+<td width="50%" valign="top" align="center"><img src="docs/screens/14b_step_edit_2.png" width="100%"></td>
 </tr>
 <tr>
 <td width="50%" valign="top">Motor current, probe offset, B&W time reduction.</td>
@@ -316,10 +316,10 @@ Full bill of materials, schematics, wiring tables, assembly and sealing details:
 
 | Method | File | Settings on the board |
 |---|---|---|
-| Arduino IDE | folder [SpoolFilmProcessor](SpoolFilmProcessor) or [SpoolFilmProcessor_v2.4_ArduinoIDE.zip](firmware/SpoolFilmProcessor_v2.4_ArduinoIDE.zip) | kept |
-| WiFi (Settings → WiFi update, network `FilmProcessor`, http://192.168.4.1) | [firmware/SpoolFilmProcessor_v2.4_update.bin](firmware/SpoolFilmProcessor_v2.4_update.bin) | kept |
+| Arduino IDE | folder [SpoolFilmProcessor](SpoolFilmProcessor) or [SpoolFilmProcessor_v2.6_ArduinoIDE.zip](firmware/SpoolFilmProcessor_v2.6_ArduinoIDE.zip) | kept |
+| WiFi (Settings → WiFi update, network `FilmProcessor`, http://192.168.4.1) | [firmware/SpoolFilmProcessor_v2.6_update.bin](firmware/SpoolFilmProcessor_v2.6_update.bin) | kept |
 | USB, update | `firmware/flash_update.bat` | kept |
-| USB, new board (address 0x0) | `firmware/flash_full.bat` / [SpoolFilmProcessor_v2.4_full.bin](firmware/SpoolFilmProcessor_v2.4_full.bin) | erased |
+| USB, new board (address 0x0) | `firmware/flash_full.bat` / [SpoolFilmProcessor_v2.6_full.bin](firmware/SpoolFilmProcessor_v2.6_full.bin) | erased |
 
 The `.bat` scripts need `esptool.exe` in the `firmware` folder – download `esptool-windows-amd64.zip` from [espressif/esptool releases](https://github.com/espressif/esptool/releases). A new board can also be flashed without the scripts: [esptool-js](https://espressif.github.io/esptool-js/) in Chrome or Edge, address `0x0`.
 

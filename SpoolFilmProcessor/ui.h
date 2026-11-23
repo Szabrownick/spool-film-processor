@@ -315,7 +315,7 @@ enum : uint16_t {
   B_LIST0 = 20, B_LIST_UP = 30, B_LIST_DN = 31,
   B_PROW0 = 40, B_PADD = 59, B_PUP = 60, B_PDN = 61, B_PRESET = 62, B_PSTART = 64,
   B_MUP = 70, B_MDN = 71,
-  B_RSTART = 80, B_RPAUSE = 81, B_RSKIP = 82, B_RSTOP = 83, B_RNEXT = 84, B_ROK = 85, B_RTEMP = 86,
+  B_RSTART = 80, B_RPAUSE = 81, B_RSKIP = 82, B_RSTOP = 83, B_RNEXT = 84, B_ROK = 85, B_RTEMP = 86, B_RADD = 87,
   B_TRESET = 90,
   B_MRPMM = 100, B_MRPMP = 101, B_MCURM = 102, B_MCURP = 103, B_MDIR = 104, B_MGO = 105,
   B_CDONE = 110, B_CAGAIN = 111,
@@ -1112,6 +1112,7 @@ struct RunState {
   bool modelOn = false;     // model sledzi koreks od DALEJ na ekranie START
   bool draining = false;    // ostatnie pourSec s kroku: silnik stoi, wylewanie
   bool usageSaved = false;  // rolki juz doliczone do zuzycia chemii (po kroku DEV)
+  uint16_t outageAdded = 0; // ile s przerwy dopisal uzytkownik (zanik zasilania)
   uint8_t resumed = 0;      // wznowiono po resecie: 1 = czas przerwy znany, 2 = nieznany (zanik zasilania)
   uint32_t resumedAt = 0;
 } run;
@@ -1282,7 +1283,9 @@ void waterAlarm(bool drainedNow) {
   bool cold = (drainedNow && wt.last < WATER_MIN) || (wt.stable && thermo.t < WATER_MIN);
   if (cold && now - lastCold > 6000) { lastCold = now; BEEP(PAT_COLD); }
 }
-bool stepCools(const Step &s) { return runNoTherm && stepAllowsComp(s) && ctrlIsCurve(s.ctrl); }
+// czujnik w powietrzu: model stygniecia liczy chemie dla kazdej agitacji (tez STICK/STAND)
+bool stepCools(const Step &s) { return runNoTherm && ctrlIsCurve(s.ctrl); }
+bool stepComp(const Step &s) { return stepAllowsComp(s) || runNoTherm; }
 
 // temperatura nominalna procesu (pierwsza krzywa w programie)
 float progNominalT(int prog) {
@@ -1475,7 +1478,7 @@ bool runResume() {
   run.lastTick = now;
   if (run.phase == R_RUN) {
     int nch = rinseChg[run.prog][run.step];
-    run.timer.start(stepBaseSec(p, s) / max(1, nch), s.ctrl, stepAllowsComp(s));
+    run.timer.start(stepBaseSec(p, s) / max(1, nch), s.ctrl, stepComp(s));
     run.timer.progress = c.progress; run.timer.elapsed = c.elapsed;
     run.timer.curveF = c.curveF; run.timer.reuseF = runReuseFactor(s);
     run.timer.factor = run.timer.curveF * run.timer.reuseF;
@@ -1510,7 +1513,7 @@ void runBeginStep() {
   const Program &p = progs[run.prog];
   const Step &s = p.s[run.step];
   int nch = rinseChg[run.prog][run.step];           // plukanie zmianami: jedna zmiana = czas / liczba zmian
-  run.timer.start(stepBaseSec(p, s) / max(1, nch), s.ctrl, stepAllowsComp(s));
+  run.timer.start(stepBaseSec(p, s) / max(1, nch), s.ctrl, stepComp(s));
   run.Tamb = roomTemp();                            // pokoj w chwili wlania (model stygniecia)
   runModelPour(s);
 
@@ -1783,7 +1786,10 @@ void drawRunDynamic() {
       bool resNote = !run.draining && (run.resumed == 2 || (run.resumed == 1 && millis() - run.resumedAt < 60000));
       if (resNote) {
         g->setFont(F_SB);
-        txtP(g, run.resumed == 2 ? TR("PO RESECIE", "AFTER RESET") : TR("WZNOWIONO", "RESUMED"), 204, 14, 2,
+        char rn[24];
+        if (run.resumed == 2 && run.outageAdded) snprintf(rn, sizeof(rn), TR("przerwa +%d min", "gap +%d min"), run.outageAdded / 60);
+        else snprintf(rn, sizeof(rn), "%s", run.resumed == 2 ? TR("PO RESECIE", "AFTER RESET") : TR("WZNOWIONO", "RESUMED"));
+        txtP(g, rn, 204, 14, 2,
              run.resumed == 2 ? C_RED2 : C_ACC);
       }
       else if (run.paused && !run.draining) { g->setFont(F_SB); txtP(g, TR("PAUZA", "PAUSE"), 204, 14, 2, C_RED2); }
@@ -2034,7 +2040,9 @@ void drawRun() {
       break;
     case R_RUN:
       button(B_RPAUSE, 4, 190, 120, 46, run.paused ? TR("WZNOW", "RESUME") : TR("PAUZA", "PAUSE"), run.paused ? C_GREEN : C_BTN2, C_WHITE, F_M);
-      button(B_RSKIP, 128, 190, 92, 46, aSkip ? TR("PEWNO?", "SURE?") : TR("POMIN", "SKIP"), aSkip ? C_ACC : C_BTN2);
+      // po zaniku zasilania: zamiast POMIN dopisz czas przerwy (kazde dotkniecie +1 min)
+      if (run.resumed == 2) button(B_RADD, 128, 190, 92, 46, TR("+1 min", "+1 min"), C_ACC);
+      else button(B_RSKIP, 128, 190, 92, 46, aSkip ? TR("PEWNO?", "SURE?") : TR("POMIN", "SKIP"), aSkip ? C_ACC : C_BTN2);
       button(B_RSTOP, 224, 190, 92, 46, aStop ? TR("PEWNO?", "SURE?") : "STOP", aStop ? C_RED2 : C_RED);
       break;
     case R_OVERRUN:
@@ -2069,6 +2077,7 @@ void runButton(uint16_t id) {
       if (run.phase == R_RUN) { run.paused = !run.paused; agitator.pause(run.paused || run.draining); run.resumed = 0; runCkptSave(); fullRedraw = true; }
       break;
     case B_RSKIP: if (armed(B_RSKIP)) runNextStep(); break;
+    case B_RADD: runApplyOutage(60); run.outageAdded += 60; runCkptSave(); break;
     case B_RSTOP: if (armed(B_RSTOP)) runStop(); break;
     case B_RNEXT: runNextStep(); break;
     case B_DTM: runRolls(-1); fullRedraw = true; break;
