@@ -40,10 +40,13 @@ void otaStart() {
         otaProgress = 0;
         if (!Update.begin(UPDATE_SIZE_UNKNOWN)) Update.printError(Serial);
       } else if (up.status == UPLOAD_FILE_WRITE) {
+        if (!Update.isRunning()) return;     // start sie nie udal - nie zapisuj smieci do flash
         if (Update.write(up.buf, up.currentSize) != up.currentSize) Update.printError(Serial);
         otaProgress = min(99, (int)(up.totalSize / 15000));   // przyblizony postep
       } else if (up.status == UPLOAD_FILE_END) {
-        if (!Update.end(true)) Update.printError(Serial);
+        if (Update.isRunning() && !Update.end(true)) Update.printError(Serial);
+      } else if (up.status == UPLOAD_FILE_ABORTED) {
+        Update.abort();                       // przerwane polaczenie - stary firmware zostaje
       }
     });
   otaServer.begin();

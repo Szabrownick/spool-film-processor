@@ -316,10 +316,10 @@ Full bill of materials, schematics, wiring tables, assembly and sealing details:
 
 | Method | File | Settings on the board |
 |---|---|---|
-| Arduino IDE | folder [SpoolFilmProcessor](SpoolFilmProcessor) or [SpoolFilmProcessor_v2.3_ArduinoIDE.zip](firmware/SpoolFilmProcessor_v2.3_ArduinoIDE.zip) | kept |
-| WiFi (Settings → WiFi update, network `FilmProcessor`, http://192.168.4.1) | [firmware/SpoolFilmProcessor_v2.3_update.bin](firmware/SpoolFilmProcessor_v2.3_update.bin) | kept |
+| Arduino IDE | folder [SpoolFilmProcessor](SpoolFilmProcessor) or [SpoolFilmProcessor_v2.4_ArduinoIDE.zip](firmware/SpoolFilmProcessor_v2.4_ArduinoIDE.zip) | kept |
+| WiFi (Settings → WiFi update, network `FilmProcessor`, http://192.168.4.1) | [firmware/SpoolFilmProcessor_v2.4_update.bin](firmware/SpoolFilmProcessor_v2.4_update.bin) | kept |
 | USB, update | `firmware/flash_update.bat` | kept |
-| USB, new board (address 0x0) | `firmware/flash_full.bat` / [SpoolFilmProcessor_v2.3_full.bin](firmware/SpoolFilmProcessor_v2.3_full.bin) | erased |
+| USB, new board (address 0x0) | `firmware/flash_full.bat` / [SpoolFilmProcessor_v2.4_full.bin](firmware/SpoolFilmProcessor_v2.4_full.bin) | erased |
 
 The `.bat` scripts need `esptool.exe` in the `firmware` folder – download `esptool-windows-amd64.zip` from [espressif/esptool releases](https://github.com/espressif/esptool/releases). A new board can also be flashed without the scripts: [esptool-js](https://espressif.github.io/esptool-js/) in Chrome or Edge, address `0x0`.
 

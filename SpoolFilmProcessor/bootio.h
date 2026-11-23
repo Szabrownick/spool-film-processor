@@ -36,6 +36,8 @@ static const Tone PAT_FINISH[] = {{1568, 85}, {0, 20}, {2093, 85}, {0, 20}, {263
 static const Tone PAT_HOT[]    = {{4186, 70}, {0, 50}, {4186, 70}, {0, 50}, {4186, 70}, {0, 50}, {4186, 70}, {0, 50}, {4186, 70}};
 // woda za zimna: wolne, niskie, opadajace tony
 static const Tone PAT_COLD[]   = {{1568, 250}, {0, 120}, {1319, 250}, {0, 120}, {1047, 400}};
+// usterka (brak odczytu czujnika w kroku z kompensacja): dwutonowa "syrena"
+static const Tone PAT_FAULT[]  = {{2349, 140}, {0, 50}, {1568, 140}, {0, 50}, {2349, 140}, {0, 50}, {1568, 260}};
 // wlaczenie urzadzenia
 static const Tone PAT_BOOT[]   = {{2093, 90}, {0, 25}, {2637, 90}, {0, 25}, {3136, 90}, {0, 25}, {4186, 300}};
 

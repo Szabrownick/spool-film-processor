@@ -314,10 +314,10 @@ Pełna lista części (BOM), schematy, tabele połączeń, montaż i uszczelnien
 
 | Sposób | Plik | Ustawienia na płytce |
 |---|---|---|
-| Arduino IDE | folder [SpoolFilmProcessor](SpoolFilmProcessor) albo [SpoolFilmProcessor_v2.3_ArduinoIDE.zip](firmware/SpoolFilmProcessor_v2.3_ArduinoIDE.zip) | zostają |
-| WiFi (Ustawienia → Aktualizacja WiFi, sieć `FilmProcessor`, http://192.168.4.1) | [firmware/SpoolFilmProcessor_v2.3_update.bin](firmware/SpoolFilmProcessor_v2.3_update.bin) | zostają |
+| Arduino IDE | folder [SpoolFilmProcessor](SpoolFilmProcessor) albo [SpoolFilmProcessor_v2.4_ArduinoIDE.zip](firmware/SpoolFilmProcessor_v2.4_ArduinoIDE.zip) | zostają |
+| WiFi (Ustawienia → Aktualizacja WiFi, sieć `FilmProcessor`, http://192.168.4.1) | [firmware/SpoolFilmProcessor_v2.4_update.bin](firmware/SpoolFilmProcessor_v2.4_update.bin) | zostają |
 | USB, aktualizacja | `firmware/flash_update.bat` | zostają |
-| USB, nowa płytka (adres 0x0) | `firmware/flash_full.bat` / [SpoolFilmProcessor_v2.3_full.bin](firmware/SpoolFilmProcessor_v2.3_full.bin) | kasowane |
+| USB, nowa płytka (adres 0x0) | `firmware/flash_full.bat` / [SpoolFilmProcessor_v2.4_full.bin](firmware/SpoolFilmProcessor_v2.4_full.bin) | kasowane |
 
 Pliki `.bat` potrzebują `esptool.exe` w folderze `firmware`. Pobierz `esptool-windows-amd64.zip` z [espressif/esptool releases](https://github.com/espressif/esptool/releases). Nową płytkę można też wgrać bez `.bat`: [esptool-js](https://espressif.github.io/esptool-js/) w Chrome lub Edge, adres `0x0`.
 

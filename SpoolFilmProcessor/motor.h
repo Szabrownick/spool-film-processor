@@ -170,6 +170,47 @@ struct AgitParams {           // wypelniane z ustawien
   int16_t rollBurstN;         // ile zmian kierunku w serii (kazda ROLL_BURST_SEG s)
 };
 
+// Docelowe obroty w chwili t [s] od startu kroku - czysta funkcja (testowana komenda 'T')
+float agitRpmAt(AgitMode mode, const AgitParams &par, float t) {
+  switch (mode) {
+    case AG_ROLL: {
+      // 1) start intensywny: czeste zmiany kierunku (zawirowania mieszaja ciecz
+      //    takze w pionie; ADOX: pierwsze 30 s ciagle, intensywniej)
+      if (t < par.rollStartSec) return ((int)(t / ROLL_START_FLIP) & 1) ? -par.rollRpm : par.rollRpm;
+      float tt = t - par.rollStartSec;
+      // 2) burst na koncu kazdego okresu rollBurstSec: rollBurstN zmian kierunku
+      if (par.rollBurstSec > 0 && par.rollBurstN > 0) {
+        float len = par.rollBurstN * ROLL_BURST_SEG;
+        float ph = fmodf(tt, (float)par.rollBurstSec);
+        if (len < par.rollBurstSec && ph >= par.rollBurstSec - len) {
+          int k = (int)((ph - (par.rollBurstSec - len)) / ROLL_BURST_SEG);
+          return (k & 1) ? -par.rollRpm : par.rollRpm;
+        }
+      }
+      // 3) normalnie: T1 s w prawo, T2 s w lewo
+      float cyc = max(1, (int)par.rollT1 + (int)par.rollT2);
+      return (fmodf(tt, cyc) < par.rollT1) ? par.rollRpm : -par.rollRpm;
+    }
+    case AG_STICK: {
+      if (t < par.stickT1) return par.stickRpm;
+      float s = t - par.stickT1;
+      int minute = (int)(s / 60.0f);
+      float inMin = s - minute * 60.0f;
+      return (inMin < par.stickT2) ? ((minute & 1) ? -par.stickRpm : par.stickRpm) : 0;
+    }
+    case AG_STAND: {
+      if (t < par.standT2) return par.standRpm;
+      float s = t - par.standT2;
+      float cyc = max(1, (int)par.standT1min) * 60.0f;
+      int n = (int)(s / cyc);
+      float inCyc = s - n * cyc;
+      // obroty T3 s na koncu kazdego okresu postoju
+      return (inCyc >= cyc - par.standT3) ? ((n & 1) ? -par.standRpm : par.standRpm) : 0;
+    }
+    default: return 0;
+  }
+}
+
 class Agitator {
 public:
   void start(AgitMode m, const AgitParams &p) { mode = m; par = p; t0 = millis(); pausedMs = 0; running = true; paused = false; }
@@ -185,58 +226,13 @@ public:
     if (!running) { motor.update(); return; }              // silnikiem steruje ktos inny (test)
     if (paused) { motor.setTarget(0); motor.update(); return; }
     float t = (millis() - t0 - pausedMs) / 1000.0f;   // sekundy od startu kroku
-    float rpm = 0;
-    switch (mode) {
-      case AG_ROLL: {
-        // 1) start intensywny: czeste zmiany kierunku (zawirowania mieszaja ciecz
-        //    takze w pionie; ADOX: pierwsze 30 s ciagle, intensywniej)
-        if (t < par.rollStartSec) {
-          rpm = ((int)(t / ROLL_START_FLIP) & 1) ? -par.rollRpm : par.rollRpm;
-          break;
-        }
-        float tt = t - par.rollStartSec;
-        // 2) burst na koncu kazdego okresu rollBurstSec: rollBurstN zmian kierunku
-        if (par.rollBurstSec > 0 && par.rollBurstN > 0) {
-          float len = par.rollBurstN * ROLL_BURST_SEG;
-          float ph = fmodf(tt, (float)par.rollBurstSec);
-          if (len < par.rollBurstSec && ph >= par.rollBurstSec - len) {
-            int k = (int)((ph - (par.rollBurstSec - len)) / ROLL_BURST_SEG);
-            rpm = (k & 1) ? -par.rollRpm : par.rollRpm;
-            break;
-          }
-        }
-        // 3) normalnie: T1 s w prawo, T2 s w lewo
-        float cyc = max(1, (int)par.rollT1 + (int)par.rollT2);
-        float ph = fmodf(tt, cyc);
-        rpm = (ph < par.rollT1) ? par.rollRpm : -par.rollRpm;
-        break;
-      }
-      case AG_STICK: {
-        if (t < par.stickT1) rpm = par.stickRpm;
-        else {
-          float s = t - par.stickT1;
-          int minute = (int)(s / 60.0f);
-          float inMin = s - minute * 60.0f;
-          rpm = (inMin < par.stickT2) ? ((minute & 1) ? -par.stickRpm : par.stickRpm) : 0;
-        }
-        break;
-      }
-      case AG_STAND: {
-        if (t < par.standT2) rpm = par.standRpm;
-        else {
-          float s = t - par.standT2;
-          float cyc = max(1, (int)par.standT1min) * 60.0f;
-          int n = (int)(s / cyc);
-          float inCyc = s - n * cyc;
-          // obroty T3 s na koncu kazdego okresu postoju
-          rpm = (inCyc >= cyc - par.standT3) ? ((n & 1) ? -par.standRpm : par.standRpm) : 0;
-        }
-        break;
-      }
-      default: rpm = 0;
-    }
-    motor.setTarget(rpm);
+    motor.setTarget(agitRpmAt(mode, par, t));
     motor.update();
+  }
+  // wznowienie po resecie: harmonogram mieszania od sekundy 'sec' kroku
+  void startAt(AgitMode m, const AgitParams &p, float sec) {
+    start(m, p);
+    t0 = millis() - (uint32_t)(max(0.0f, sec) * 1000.0f);
   }
 
 private:

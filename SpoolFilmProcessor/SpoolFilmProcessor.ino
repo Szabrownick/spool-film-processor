@@ -193,8 +193,82 @@ void tmcDiagOneWire() {
   Serial.println("[UART1W] koniec testu");
 }
 
+// ---------------------------------------------------------------------
+//  SAMOTEST (komenda 'T'): sprawdza na prawdziwym ESP logike, od ktorej
+//  zalezy wynik filmu. Kazdy test drukuje PASS/FAIL z liczbami.
+// ---------------------------------------------------------------------
+static int stPass = 0, stFail = 0;
+static void stCheck(bool ok, const char *name, float got, float want) {
+  (ok ? stPass : stFail)++;
+  Serial.printf("[SELFTEST] %s %-46s wynik %.3f  oczekiwane %.3f\n", ok ? "PASS" : "FAIL", name, got, want);
+}
+// symulacja kroku krokami dt przy stalej temperaturze -> czas do konca [s]
+static float stRunStep(float base, int16_t ctrl, float T, float dt) {
+  StepTimer t; t.start(base, ctrl, true);
+  float sec = 0;
+  while (!t.done() && sec < 20000) { t.tick(dt, T, true, 1.0f); sec += dt; }
+  return sec;
+}
+void selfTest() {
+  stPass = stFail = 0;
+  const int16_t ADOX = CV(9);
+  // 1) krzywa ADOX z karty producenta: 38 C = 3:15, 30 C = 8:00
+  stCheck(fabsf(curveFactor(ctrlCurve(ADOX), 38.0f) - 1.0f) < 0.005f, "ADOX F(38 C) = 1,000", curveFactor(ctrlCurve(ADOX), 38.0f), 1.0f);
+  stCheck(fabsf(195 * curveFactor(ctrlCurve(ADOX), 30.0f) - 480) < 2, "ADOX 30 C = 8:00 [s]", 195 * curveFactor(ctrlCurve(ADOX), 30.0f), 480);
+  // 2) kazda krzywa: cieplej = krocej (monotonicznie), F(nominalna) = 1
+  for (int c = 0; c < (int)NUM_CURVES; c++) {
+    const Curve &cv = CURVES[c];
+    bool mono = true;
+    for (int t10 = cv.pts[0].t10 - 40; t10 < cv.pts[cv.n - 1].t10 + 40; t10 += 2)
+      if (curveFactor(cv, (t10 + 2) / 10.0f) > curveFactor(cv, t10 / 10.0f) + 1e-6f) mono = false;
+    char n[64]; snprintf(n, sizeof(n), "krzywa %s malejaca, F(nom)=1", cv.tag);
+    float fn = curveFactor(cv, cv.nom10 / 10.0f);
+    stCheck(mono && fabsf(fn - 1) < 0.01f, n, fn, 1.0f);
+  }
+  // 3) licznik nie zalezy od kroku petli: dt 0,1 s i 5 s daja ten sam czas
+  float a = stRunStep(195, ADOX, 36.0f, 0.1f), b = stRunStep(195, ADOX, 36.0f, 5.0f);
+  stCheck(fabsf(a - b) <= 5.0f, "krok 0,1 s vs 5 s (ADOX 36 C) [s]", b, a);
+  // 4) wznowienie po resecie: 60 s przerwy z chemia dolicza sie do postepu
+  {
+    RunState keep = run;
+    run = RunState(); run.phase = R_RUN;
+    run.timer.start(195, ADOX, true); run.timer.tick(60, 38.0f, true, 1.0f);
+    float before = run.timer.remaining();
+    runApplyOutage(60);
+    stCheck(fabsf(before - run.timer.remaining() - 60) < 0.5f, "przerwa 60 s skraca reszte kroku o 60 s", before - run.timer.remaining(), 60);
+    run = keep;
+  }
+  // 5) zapis/odczyt punktu kontrolnego w NVS (bez zmiany biezacego procesu)
+  {
+    RunCkpt w{}; w.magic = CKPT_MAGIC; w.prog = 7; w.step = 3; w.progress = 0.4321f; w.rtcUs = rtcNowUs();
+    prefs.putBytes("ckT", &w, sizeof(w));
+    RunCkpt r{}; prefs.getBytes("ckT", &r, sizeof(r)); prefs.remove("ckT");
+    stCheck(r.magic == CKPT_MAGIC && r.step == 3 && r.progress == w.progress, "NVS: zapis i odczyt stanu procesu", r.progress, w.progress);
+  }
+  // 6) mieszanie ROLL: kazdy odcinek ruchu dluzszy niz nawrot silnika
+  //    (nawrot = 2 x obroty / przyspieszenie), inaczej spirala nie nabiera predkosci
+  {
+    AgitParams p = agitParams();
+    for (int rpm : {60, 90}) {
+      p.rollRpm = rpm;
+      float rev = 2.0f * rpm / MOTOR_ACCEL_RPM_S, minSeg = 1e9, segStart = 0, prev = agitRpmAt(AG_ROLL, p, 0);
+      for (float t = 0.05f; t < 300; t += 0.05f) {
+        float r = agitRpmAt(AG_ROLL, p, t);
+        if (r != prev) { minSeg = min(minSeg, t - segStart); segStart = t; prev = r; }
+      }
+      char n[64]; snprintf(n, sizeof(n), "ROLL %d rpm: najkrotszy odcinek >= nawrot [s]", rpm);
+      stCheck(minSeg >= rev, n, minSeg, rev);
+    }
+  }
+  // 7) zegar RTC (do liczenia przerwy po resecie) idzie
+  { int64_t t0 = rtcNowUs(); delay(50); float d = (rtcNowUs() - t0) / 1000.0f;
+    stCheck(d > 40 && d < 80, "zegar RTC: 50 ms [ms]", d, 50); }
+  Serial.printf("[SELFTEST] WYNIK: %d PASS, %d FAIL, reset=%d\n", stPass, stFail, (int)esp_reset_reason());
+}
+
 // Komendy testowe z Serial Monitor (115200): b = pik, a = alarm, f = melodia,
-// t = temperatura, i = informacje
+// t = temperatura, i = informacje, T = samotest, p = zrzut biezacego ekranu,
+// R = reset plytki (test wznawiania procesu)
 void handleSerial() {
   while (Serial.available()) {
     char c = Serial.read();
@@ -212,6 +286,10 @@ void handleSerial() {
         Serial.printf("[TEST] silnik START %d rpm, %d mA (UART GPIO21, adres %d)\n", S.rollRpm, S.currentmA, TMC_ADDR);
         break;
       case 's': motor.setTarget(0); Serial.println("[TEST] silnik STOP"); break;
+      case 'T': selfTest(); break;
+      case 'p': captureOne("live"); Serial.println("CAPDONE"); break;
+      case 'R': Serial.println("[TEST] reset plytki"); Serial.flush(); delay(50); ESP.restart(); break;
+      case 'x': bootio.soundOn = true; BEEP(PAT_FAULT); Serial.println("[TEST] usterka czujnika"); break;
       case 'u': tmcDiag(); break;
       case 'w': tmcDiagOneWire(); break;
       case 'L': gLang = !gLang; fullRedraw = true; Serial.println(gLang ? "[TEST] jezyk EN" : "[TEST] jezyk PL"); break;

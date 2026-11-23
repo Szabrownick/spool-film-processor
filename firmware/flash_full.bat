@@ -17,7 +17,7 @@ if /i not "%OK%"=="Y" goto :eof
 set PORT=COM3
 set /p PORT=COM port [Enter = COM3]: 
 echo.
-esptool.exe --chip esp32c3 --port %PORT% --baud 921600 write-flash 0x0 SpoolFilmProcessor_v2.3_full.bin
+esptool.exe --chip esp32c3 --port %PORT% --baud 921600 write-flash 0x0 SpoolFilmProcessor_v2.4_full.bin
 echo.
 if errorlevel 1 (
   echo ERROR. Hold BOOT, press RESET, release BOOT and try again.

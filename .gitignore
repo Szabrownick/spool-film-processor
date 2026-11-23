@@ -3,3 +3,4 @@ firmware/esptool.exe
 build/
 .vscode/
 _oryginaly_zdjec/
+.tools/

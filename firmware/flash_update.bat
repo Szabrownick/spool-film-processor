@@ -16,7 +16,7 @@ echo Connect the board with a USB-C cable.
 set PORT=COM3
 set /p PORT=COM port [Enter = COM3]: 
 echo.
-esptool.exe --chip esp32c3 --port %PORT% --baud 921600 write-flash 0x10000 SpoolFilmProcessor_v2.3_update.bin
+esptool.exe --chip esp32c3 --port %PORT% --baud 921600 write-flash 0x10000 SpoolFilmProcessor_v2.4_update.bin
 echo.
 if errorlevel 1 (
   echo ERROR. Check the COM port in Device Manager. If it still fails:

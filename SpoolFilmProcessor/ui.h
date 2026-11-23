@@ -376,7 +376,9 @@ void goScreen(Scr s) {
 }
 void runStart(int prog);
 // ekran po wlaczeniu: ostatnio wybrany program (ekran START), cofniecie -> lista
+bool runResume();
 void goStartScreen() {
+  if (runResume()) return;       // przerwany proces (reset w trakcie) - wracamy do niego
   int p = prefs.getShort("lastP", -1);
   int c = prefs.getShort("lastC", -1);
   if (p >= 0 && p < NUM_PROGS && progs[p].nSteps > 0) {
@@ -511,7 +513,7 @@ void tile(uint16_t id, int x, int y, int w, int h, const char *label, const char
   }
   tft.setFont(F_SB);
   txt(&tft, label, cx, y + h - 26, 1, C_WHITE);
-  if (sub) { tft.setFont(&lgfx::fonts::Font0); txt(&tft, sub, cx, y + h - 12, 1, C_DIM); }
+  if (sub) { tft.setFont(&lgfx::fonts::Font0); txt(&tft, sub, cx, y + h - 12, 1, C_TXT2); }
   addBtn(x, y, w, h, id);
 }
 
@@ -963,7 +965,7 @@ void drawMenuRow(int r) {
   bool scroll = nItems > MROWS;
   int right = scroll ? 280 : 316;
   tft.fillRect(0, y, right + 2, 49, C_BG);
-  if (r < MROWS - 1) tft.drawFastHLine(6, y + 49, right - 6, C_BORDER);
+  if (r < MROWS - 1) tft.drawFastHLine(6, y + 49, right - 6, C_BTN2);
   for (int j = 0; j < 4; j++) removeBtn(B_ITEM0 + r * 4 + j);
   if (k >= nItems) return;
   const Item &it = items[k];
@@ -1092,6 +1094,8 @@ struct RunState {
   float Troom = 22.0f;      // temperatura pokoju zapisana RAZ na starcie (czujnik w powietrzu)
   bool roomSet = false;
   bool modelOn = false;     // model sledzi koreks od DALEJ na ekranie START
+  uint8_t resumed = 0;      // wznowiono po resecie: 1 = czas przerwy znany, 2 = nieznany (zanik zasilania)
+  uint32_t resumedAt = 0;
 } run;
 
 // Czujnik nie siega chemii (np. Paterson na stojaco) -> czujnik mierzy powietrze,
@@ -1378,6 +1382,111 @@ float runRemainingEstimate() {
   return sum;
 }
 
+// =====================================================================
+//  ZAPIS STANU PROCESU - wznowienie po resecie lub zaniku zasilania
+//  Film zostaje w chemii, gdy plytka sie zresetuje (spadek napiecia przy
+//  starcie silnika, odlaczony kabel USB, watchdog). Stan procesu zapisujemy
+//  w NVS co CKPT_EVERY_MS i przy kazdej zmianie fazy. Po starcie:
+//   - reset programowy / brownout / watchdog: zegar RTC liczyl dalej, wiec
+//     znamy czas przerwy - doliczamy go do postepu kroku (chemia dzialala
+//     dalej) i krok trwa dalej sam, z mieszaniem,
+//   - zanik zasilania (power-on): czasu przerwy nie znamy - krok czeka
+//     w PAUZIE z napisem "PO RESECIE", uzytkownik decyduje.
+// =====================================================================
+#include <esp_system.h>
+#include <sys/time.h>
+#define CKPT_MAGIC    0x5C02
+#define CKPT_EVERY_MS 5000
+struct RunCkpt {
+  uint16_t magic;
+  uint8_t prog, step, phase, change, paused, tankRolls, roomSet, modelOn;
+  int16_t noTherm, volMl, horiz, preT;
+  float progress, elapsed, curveF, Tmodel, Twall, Troom;
+  uint32_t procSec;           // czas procesu do chwili zapisu [s]
+  uint32_t overrunMs;         // ile minelo z dobiegu silnika [ms]
+  int64_t rtcUs;              // zegar systemowy (RTC) w chwili zapisu
+};
+static int64_t rtcNowUs() { struct timeval tv; gettimeofday(&tv, nullptr); return (int64_t)tv.tv_sec * 1000000LL + tv.tv_usec; }
+uint32_t ckptLast = 0;
+
+void runCkptSave() {
+  RunCkpt c{};
+  c.magic = CKPT_MAGIC;
+  c.prog = run.prog; c.step = run.step; c.phase = run.phase; c.change = run.change;
+  c.paused = run.paused; c.tankRolls = run.tankRolls; c.roomSet = run.roomSet; c.modelOn = run.modelOn;
+  c.noTherm = runNoTherm; c.volMl = runVolMl; c.horiz = runHoriz; c.preT = runPreT;
+  c.progress = run.timer.progress; c.elapsed = run.timer.elapsed; c.curveF = run.timer.curveF;
+  c.Tmodel = run.Tmodel; c.Twall = run.Twall; c.Troom = run.Troom;
+  c.procSec = (millis() - run.procStart) / 1000;
+  c.overrunMs = run.phase == R_OVERRUN ? millis() - run.overrunStart : 0;
+  c.rtcUs = rtcNowUs();
+  prefs.putBytes("ck", &c, sizeof(c));
+  ckptLast = millis();
+}
+void runCkptClear() { prefs.remove("ck"); }
+
+// Przerwa z chemia w koreksie: krok liczy sie dalej (ostatni wspolczynnik temperatury)
+void runApplyOutage(float sec) {
+  if (sec <= 0) return;
+  if (run.phase == R_RUN) {
+    run.timer.progress += sec / (run.timer.baseSec * max(0.25f, run.timer.factor));
+    run.timer.elapsed += sec;
+  } else if (run.phase == R_OVERRUN) run.overrunStart -= (uint32_t)(sec * 1000);
+  run.procStart -= (uint32_t)(sec * 1000);
+}
+
+void runBeginStep();
+// zwraca true, gdy wznowiono przerwany proces
+bool runResume() {
+  RunCkpt c{};
+  if (prefs.getBytesLength("ck") != sizeof(c) || !prefs.getBytes("ck", &c, sizeof(c)) || c.magic != CKPT_MAGIC) return false;
+  if (c.prog >= NUM_PROGS || c.step >= progs[c.prog].nSteps || c.phase > R_DONE) { runCkptClear(); return false; }
+  const Program &p = progs[c.prog];
+  const Step &s = p.s[c.step];
+  run = RunState();
+  waterReset();
+  run.prog = c.prog; run.step = c.step; run.phase = (RunPhase)c.phase; run.change = c.change;
+  run.paused = c.paused; run.tankRolls = max(1, (int)c.tankRolls);
+  run.roomSet = c.roomSet; run.modelOn = c.modelOn;
+  run.Tmodel = c.Tmodel; run.Twall = c.Twall; run.Troom = c.Troom;
+  runNoTherm = c.noTherm; runVolMl = c.volMl; runHoriz = c.horiz; runPreT = c.preT;
+  motor.currentmA = S.currentmA;
+  uint32_t now = millis();
+  run.procStart = now - c.procSec * 1000UL;
+  run.lastTick = now;
+  if (run.phase == R_RUN) {
+    int nch = rinseChg[run.prog][run.step];
+    run.timer.start(stepBaseSec(p, s) / max(1, nch), s.ctrl, stepAllowsComp(s));
+    run.timer.progress = c.progress; run.timer.elapsed = c.elapsed;
+    run.timer.curveF = c.curveF; run.timer.reuseF = runReuseFactor(s);
+    run.timer.factor = run.timer.curveF * run.timer.reuseF;
+  }
+  if (run.phase == R_OVERRUN) run.overrunStart = now - c.overrunMs;
+  // ile trwala przerwa? Zegar RTC liczy dalej przy resecie programowym, brownoucie
+  // i watchdogu; po wlaczeniu zasilania startuje od zera
+  esp_reset_reason_t why = esp_reset_reason();
+  int64_t gap = rtcNowUs() - c.rtcUs;
+  bool known = why != ESP_RST_POWERON && why != ESP_RST_UNKNOWN && gap > 0 && gap < 3600LL * 1000000LL;
+  float outSec = known ? gap / 1e6f : 0;
+  if (known) runApplyOutage(outSec);
+  else if (run.phase == R_RUN) run.paused = true;          // nie wiemy, ile stal - decyzja uzytkownika
+  run.resumed = known ? 1 : 2;
+  run.resumedAt = now;
+  if (run.phase == R_RUN && s.agit != AG_NONE) {
+    agitator.startAt((AgitMode)s.agit, agitParams(), run.timer.elapsed);
+    if (run.paused) agitator.pause(true);
+  } else if (run.phase == R_OVERRUN) {
+    if (s.agit != AG_NONE) agitator.start((AgitMode)s.agit, agitParams());
+  }
+  Serial.printf("[WZNOW] program %d krok %d faza %d postep %.3f, reset=%d, przerwa %s %.1f s\n",
+                run.prog, run.step, run.phase, run.timer.progress, (int)why, known ? "znana" : "NIEZNANA", outSec);
+  curProg = run.prog;
+  goScreen(S_RUN);
+  BEEP(PAT_STEP);
+  runCkptSave();
+  return true;
+}
+
 void runBeginStep() {
   const Program &p = progs[run.prog];
   const Step &s = p.s[run.step];
@@ -1392,6 +1501,7 @@ void runBeginStep() {
   if (s.agit != AG_NONE) agitator.start((AgitMode)s.agit, agitParams());
   else agitator.stop();
   BEEP(PAT_OK);
+  runCkptSave();
   fullRedraw = true;
 }
 
@@ -1408,11 +1518,13 @@ void runNextStep() {
   run.change = 0;
   if (run.step >= progs[run.prog].nSteps) { run.phase = R_DONE; BEEP(PAT_FINISH); }
   else { run.phase = R_POUR; BEEP(PAT_STEP); }
+  runCkptSave();                   // tez GOTOWE - po resecie zostaje ekran z licznikiem rolek
   fullRedraw = true;
 }
 
 void runStart(int prog) {
   run = RunState();
+  runCkptClear();                  // nowy proces - poprzedni (porzucony) nie wraca po resecie
   waterReset();
   run.prog = prog;
   runTsrcLoad(prog);
@@ -1512,20 +1624,37 @@ void setupButton(uint16_t id) {
 
 void runStop() {
   agitator.stop();
+  runCkptClear();
   goScreen(S_PROG);
 }
 
 void runTick() {
   uint32_t now = millis();
-  float dt = (now - run.lastTick) / 1000.0f;
+  // dtReal - prawdziwy uplyw czasu: chemia dziala, nawet gdy petla sie zatnie
+  // (zapis do pamieci, odswiezanie ekranu), wiec licznik kroku nie moze go gubic.
+  // dt (ograniczone do 2 s) - tylko do modelu stygniecia (stabilnosc rachunku).
+  float dtReal = (now - run.lastTick) / 1000.0f;
   run.lastTick = now;
-  if (dt > 2.0f) dt = 2.0f;
+  float dt = min(dtReal, 2.0f);
   runModelTick(dt);
-  if (run.phase == R_RUN && !run.paused) {
+  // PAUZA zatrzymuje tylko silnik - film lezy w chemii i dalej sie wywoluje,
+  // wiec czas kroku liczy sie dalej (inaczej minuta pauzy = minuta za dlugo)
+  if (run.phase == R_RUN) {
     const Step &cs = progs[run.prog].s[run.step];
     if (stepCools(cs)) {                 // temperatura chemii z modelu stygniecia
-      run.timer.tick(dt, run.Tmodel, true, runReuseFactor(cs));
-    } else run.timer.tick(dt, thermo.t, thermo.valid, runReuseFactor(cs));
+      run.timer.tick(dtReal, run.Tmodel, true, runReuseFactor(cs));
+    } else run.timer.tick(dtReal, thermo.t, thermo.valid, runReuseFactor(cs));
+    // czujnik w chemii zgubil odczyt w kroku z kompensacja: czas liczy sie
+    // z ostatniej znanej temperatury - ostrzez (co 20 s), bo to juz szacunek
+    static uint32_t lostSince = 0, lostBeep = 0;
+    if (!runNoTherm && run.timer.compensate && !thermo.valid) {
+      if (!lostSince) lostSince = now;
+      if (now - lostSince > 5000 && now - lostBeep > 20000) {
+        lostBeep = now; BEEP(PAT_FAULT);
+        Serial.printf("[TEMP] brak odczytu czujnika - czas z ostatniej temperatury (x%.2f)\n", run.timer.curveF);
+      }
+    } else lostSince = 0;
+    if (now - ckptLast >= CKPT_EVERY_MS) runCkptSave();
     // Pikanie co pelna minute: przy 3:00 -> 3x, 2:00 -> 2x, 1:00 -> 1x.
     // Kompensacja moze wydluzyc czas (chemia stygnie) - wtedy nie powtarzamy
     // ogloszenia, czekamy az czas zejdzie ponizej kolejnej pelnej minuty.
@@ -1541,12 +1670,14 @@ void runTick() {
         agitator.stop();
         run.change++;
         run.phase = R_POUR;
+        runCkptSave();
         BEEP(PAT_STEP);
         fullRedraw = true;
         return;
       }
       run.phase = R_OVERRUN;               // silnik pracuje jeszcze 15 s
       run.overrunStart = now;
+      runCkptSave();
       BEEP(PAT_ALARM);
       fullRedraw = true;
     }
@@ -1621,7 +1752,15 @@ void drawRunDynamic() {
         g->fillRoundRect(6, 3, pw, 22, 11, rgb565(60, 30, 10));
         txtP(g, b, 6 + pw / 2, 14, 1, C_ACC);
       }
-      if (run.paused) { g->setFont(F_SB); txtP(g, TR("PAUZA", "PAUSE"), 204, 14, 2, C_RED2); }
+      // po resecie: "PO RESECIE" (przerwa nieznana - krok czeka w pauzie)
+      // albo "WZNOWIONO" przez minute (przerwa znana i doliczona)
+      bool resNote = run.resumed == 2 || (run.resumed == 1 && millis() - run.resumedAt < 60000);
+      if (resNote) {
+        g->setFont(F_SB);
+        txtP(g, run.resumed == 2 ? TR("PO RESECIE", "AFTER RESET") : TR("WZNOWIONO", "RESUMED"), 204, 14, 2,
+             run.resumed == 2 ? C_RED2 : C_ACC);
+      }
+      else if (run.paused) { g->setFont(F_SB); txtP(g, TR("PAUZA", "PAUSE"), 204, 14, 2, C_RED2); }
       else if (rinseChg[run.prog][run.step] > 0) {
         snprintf(b, sizeof(b), "%d/%d", run.change + 1, rinseChg[run.prog][run.step]);
         g->setFont(F_SB);
@@ -1636,13 +1775,13 @@ void drawRunDynamic() {
       g->setTextSize(1);
       // gruby zaokraglony pasek postepu + procent
       float pr = constrain(run.timer.progress, 0.0f, 1.0f);
-      g->fillRoundRect(8, 110, 154, 10, 5, C_BTN2);
-      int fw = max(10, (int)(154 * pr));
-      g->fillRoundRect(8, 110, fw, 10, 5, C_ACC);
-      g->fillCircle(8 + fw - 5, 115, 3, rgb565(255, 190, 140));     // jasna "glowica"
+      // pasek na cala szerokosc panelu, procent w srodku paska
+      g->fillRoundRect(6, 104, 200, 20, 10, C_BTN2);
+      int fw = (int)(200 * pr);
+      if (fw >= 20) g->fillRoundRect(6, 104, fw, 20, 10, C_ACC);
       snprintf(b, sizeof(b), "%d%%", (int)(pr * 100));
       g->setFont(F_SB);
-      txtP(g, b, 206, 115, 2, C_TXT2);
+      txtP(g, b, 106, 114, 1, C_WHITE);
     } else if (run.phase == R_OVERRUN) {
       g->setFont(F_L);
       txtP(g, TR("WYLEJ", "DRAIN"), 8, 30, 0, C_RED2);
@@ -1733,7 +1872,9 @@ tempPanel:
     g->setFont(F_SB);
     const char *unitLbl = S.tempF ? "~F" : "~C";
     if (runNoTherm) unitLbl = (run.phase == R_RUN && cools) ? TR("model", "model") : TR("pokoj", "room");
-    txtP(g, unitLbl, 66, 50, 1, runNoTherm ? C_ACC : rgb565(200, 200, 200));
+    bool lost = !runNoTherm && !vShow;   // czujnik w chemii nie odpowiada
+    if (lost) unitLbl = TR("BRAK", "LOST");
+    txtP(g, unitLbl, 66, 50, 1, lost ? C_RED2 : (runNoTherm ? C_ACC : rgb565(200, 200, 200)));
     if (run.phase == R_RUN) {
       // laczny mnoznik duzy; pod nim na zmiane co 3 s: temperatura / chemia (/ pokoj)
       snprintf(b, sizeof(b), "x%.2f", run.timer.factor);
@@ -1770,7 +1911,7 @@ tempPanel:
       }
       if (!runNoTherm) {                  // przy czujniku w powietrzu brak miejsca - panel i tak reaguje
         g->setFont(&lgfx::fonts::Font0);
-        txtP(g, TR("dotknij = opcje", "tap = options"), 53, 119, 1, C_SOFT);
+        txtP(g, TR("dotknij = opcje", "tap = options"), 53, 119, 1, C_WHITE);
       }
     }
     boxEnd(214, 58);
@@ -1890,14 +2031,14 @@ void runButton(uint16_t id) {
   switch (id) {
     case B_RSTART: if (run.phase == R_POUR) runBeginStep(); break;
     case B_RPAUSE:
-      if (run.phase == R_RUN) { run.paused = !run.paused; agitator.pause(run.paused); fullRedraw = true; }
+      if (run.phase == R_RUN) { run.paused = !run.paused; agitator.pause(run.paused); run.resumed = 0; runCkptSave(); fullRedraw = true; }
       break;
     case B_RSKIP: if (armed(B_RSKIP)) runNextStep(); break;
     case B_RSTOP: if (armed(B_RSTOP)) runStop(); break;
     case B_RNEXT: runNextStep(); break;
     case B_DTM: run.tankRolls = max(1, run.tankRolls - 1); fullRedraw = true; break;
     case B_DTP: run.tankRolls = min(8, run.tankRolls + 1); fullRedraw = true; break;
-    case B_ROK: runFinishSave(); goScreen(S_PROG); break;
+    case B_ROK: runFinishSave(); runCkptClear(); goScreen(S_PROG); break;
     case B_RTEMP: if (run.phase == R_POUR) goScreen(S_SETUP); break;
   }
 }
@@ -1911,7 +2052,7 @@ void bootPressed() {
     case R_POUR: runBeginStep(); break;
     case R_RUN: runButton(B_RPAUSE); break;
     case R_OVERRUN: runNextStep(); break;
-    case R_DONE: runFinishSave(); goScreen(S_PROG); break;
+    case R_DONE: runFinishSave(); runCkptClear(); goScreen(S_PROG); break;
   }
 }
 
